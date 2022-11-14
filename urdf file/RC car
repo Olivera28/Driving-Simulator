@@ -1,0 +1,888 @@
+<?xml version="1.0"?>
+<robot name="beemo">
+
+  <material name="blue">
+    <color rgba="0 0 0.8 1"/>
+  </material>
+
+  <material name="black">
+    <color rgba="0 0 0 1"/>
+  </material>
+
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+
+  <material name="coral">
+    <color rgba="1 .5 .33 1"/>
+  </material>
+
+  <material name="emerald">
+    <color rgba=".33 .8 .5 1"/>
+  </material>
+
+  <material name="neon orange">
+    <color rgba="1 .33 .2 1"/>
+  </material>
+
+<!--Bottom base of the RC car --->
+ 
+  <link name="base_DK">
+    <visual>
+      <geometry>
+        <box size=".275 .08 .004"/>
+      </geometry>
+     <origin xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  
+  <link name="center">
+    <visual>
+      <geometry>
+        <box size=".13 .08 .004"/>
+      </geometry>
+     <origin rpy="0 0 1.5705" xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="base_to_center" type="fixed">
+    <parent link="base_DK"/>
+    <child link="center"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+
+
+<!--Top base of the RC car --->
+ 
+  <link name="top_base">
+    <visual>
+      <geometry>
+        <box size=".25 .08 .004"/>
+      </geometry>
+     <origin xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="base_to_top" type="fixed">
+    <parent link="base_DK"/>
+    <child link="top_base"/>
+    <origin xyz="-0.01 0 0.05"/>
+  </joint>
+  
+  <link name="top_base_c">
+    <visual>
+      <geometry>
+        <box size=".12 .08 .004"/>
+      </geometry>
+     <origin rpy="0 0 1.5705" xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="top_base_to_c" type="fixed">
+    <parent link="top_base"/>
+    <child link="top_base_c"/>
+    <origin xyz="0.01 0 0"/>
+  </joint>
+
+
+<!--   Extra form for front wheels in the base   ---> 
+  <link name="l_corner_center">
+    <visual>
+      <geometry>
+        <box size=".02 .02 .004"/>
+      </geometry>
+     <origin rpy="0 0 0.785" xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="center_l_corner" type="fixed">
+    <parent link="base_DK"/>
+    <child link="l_corner_center"/>
+    <origin xyz="0.10 0.035 0"/>
+  </joint>
+  
+  
+  <link name="r_corner_center">
+    <visual>
+      <geometry>
+        <box size=".02 .02 .004"/>
+      </geometry>
+     <origin rpy="0 0 0.785" xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="center_r_corner" type="fixed">
+    <parent link="base_DK"/>
+    <child link="r_corner_center"/>
+    <origin xyz="0.10 -0.035 0"/>
+  </joint>
+
+  
+  <link name="l_corner_stand">
+    <visual>
+     <geometry>
+       <cylinder length="0.03" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="coral"/>
+    </visual>
+  </link>
+  
+  <joint name="l_corner_center_l_stand" type="fixed">
+    <parent link="l_corner_center"/>
+    <child link="l_corner_stand"/>
+    <origin xyz="0 0.01 0.0175"/>
+  </joint>
+  
+  
+  <link name="r_corner_stand">
+    <visual>
+     <geometry>
+       <cylinder length="0.03" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="coral"/>
+    </visual>
+  </link>
+  
+  
+  <joint name="r_corner_center_r_stand" type="fixed">
+    <parent link="r_corner_center"/>
+    <child link="r_corner_stand"/>
+    <origin xyz="0 -0.01 0.0175"/>
+  </joint>
+
+  
+  
+  <link name="l_sphere">
+    <visual>
+     <geometry>
+       <sphere radius="0.0075"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="emerald"/>
+    </visual>
+  </link>
+  
+  <joint name="l_corner_stand_sphere" type="fixed">
+    <parent link="l_corner_stand"/>
+    <child link="l_sphere"/>
+    <origin xyz="0 0.00275 0"/>
+  </joint>
+  
+  
+  <link name="r_sphere">
+    <visual>
+     <geometry>
+       <sphere radius="0.0075"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="emerald"/>
+    </visual>
+  </link>
+    
+  <joint name="r_corner_stand_sphere" type="fixed">
+    <parent link="r_corner_stand"/>
+    <child link="r_sphere"/>
+    <origin xyz="0 -0.00275 0"/>
+  </joint>
+  
+  <!--Front Wheels_Spheres shafts --->  
+  
+  <link name="l_sphere_shaft">
+    <visual>
+     <geometry>
+       <cylinder length="0.01" radius="0.0025"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="white"/>
+    </visual>
+  </link>
+
+
+  <joint name="l_sphere_to_shaft" type="fixed">
+    <parent link="l_sphere"/>
+    <child link="l_sphere_shaft"/>
+    <origin xyz="0 0.005 0"/>
+  </joint>
+  
+
+
+<link name="r_sphere_shaft">
+    <visual>
+     <geometry>
+       <cylinder length="0.01" radius="0.0025"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="white"/>
+    </visual>
+  </link>
+
+
+  <joint name="r_sphere_to_shaft" type="fixed">
+    <parent link="r_sphere"/>
+    <child link="r_sphere_shaft"/>
+    <origin xyz="0 -0.005 0"/>
+  </joint>
+  
+  
+<!--    Front Wheels           --->  
+  
+  <link name="l_f_wheel">
+    <visual>
+     <geometry>
+       <cylinder length="0.025" radius="0.0325"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="black"/>
+    </visual>
+  </link>
+
+
+  <joint name="base_to_l_f_wheel" type="fixed">
+    <parent link="l_sphere_shaft"/>
+    <child link="l_f_wheel"/>
+    <origin xyz="0 0.0175 0"/>
+  </joint> 
+  
+  
+  <link name="r_f_wheel">
+    <visual>
+     <geometry>
+       <cylinder length="0.025" radius="0.0325"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="black"/>
+    </visual>
+  </link>
+
+
+  <joint name="base_to_r_f_wheel" type="fixed">
+    <parent link="r_sphere_shaft"/>
+    <child link="r_f_wheel"/>
+    <origin xyz="0 -0.0175 0"/>
+  </joint> 
+  
+  
+  
+  
+
+<!--2 DC motors --->
+
+<link name="l_wheel_motor">
+    <visual>
+     <geometry>
+       <cylinder length="0.02" radius="0.015"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="white"/>
+    </visual>
+  </link>
+
+
+  <joint name="base_to_l_wheel_motor" type="fixed">
+    <parent link="base_DK"/>
+    <child link="l_wheel_motor"/>
+    <origin xyz="-0.10 0.03 0.015"/>
+  </joint>
+
+
+<link name="r_wheel_motor">
+    <visual>
+     <geometry>
+       <cylinder length="0.02" radius="0.015"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="white"/>
+    </visual>
+  </link>
+
+
+  <joint name="base_to_r_wheel_motor" type="fixed">
+    <parent link="base_DK"/>
+    <child link="r_wheel_motor"/>
+    <origin xyz="-0.10 -0.03 0.015"/>
+  </joint>
+  
+  
+<!--DC Motor shafts --->  
+<link name="l_shaft">
+    <visual>
+     <geometry>
+       <cylinder length="0.022" radius="0.0025"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="coral"/>
+    </visual>
+  </link>
+
+
+  <joint name="l_motor_shaft" type="continuous">
+    <parent link="l_wheel_motor"/>
+    <child link="l_shaft"/>
+    <origin xyz="0 0.021 0"/>
+  </joint>
+  
+
+
+<link name="r_shaft">
+    <visual>
+     <geometry>
+       <cylinder length="0.022" radius="0.0025"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="coral"/>
+    </visual>
+  </link>
+
+
+  <joint name="r_motor_shaft" type="continuous">
+    <parent link="r_wheel_motor"/>
+    <child link="r_shaft"/>
+    <origin xyz="0 -0.021 0"/>
+  </joint>
+
+
+<!--       Back Wheels          --->
+   
+   <link name="l_b_wheel">
+    <visual>
+     <geometry>
+       <cylinder length="0.025" radius="0.0325"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="black"/>
+    </visual>
+  </link>
+
+
+  <joint name="base_to_l_b_wheel" type="fixed">
+    <parent link="l_shaft"/>
+    <child link="l_b_wheel"/>
+    <origin xyz="0 0.02 0"/>
+  </joint> 
+  
+  
+  <link name="r_b_wheel">
+    <visual>
+     <geometry>
+       <cylinder length="0.025" radius="0.0325"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="black"/>
+    </visual>
+  </link>
+
+
+  <joint name="base_to_r_b_wheel" type="fixed">
+    <parent link="r_shaft"/>
+    <child link="r_b_wheel"/>
+    <origin xyz="0 -0.02 0"/>
+  </joint> 
+  
+  
+  <link name="l_dot">
+    <visual>
+     <geometry>
+       <cylinder length="0.025" radius="0.005"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="white"/>
+    </visual>
+  </link>
+
+
+  <joint name="l_dot_to_l_b_wheel" type="fixed">
+    <parent link="l_b_wheel"/>
+    <child link="l_dot"/>
+    <origin xyz="0.025 0.005 0"/>
+  </joint>
+  
+  
+  <link name="r_dot">
+    <visual>
+     <geometry>
+       <cylinder length="0.025" radius="0.005"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="white"/>
+    </visual>
+  </link>
+
+
+  <joint name="r_dot_to_r_b_wheel" type="fixed">
+    <parent link="r_b_wheel"/>
+    <child link="r_dot"/>
+    <origin xyz="0.025 -0.005 0"/>
+  </joint>
+  
+
+
+
+<!--Stand ups --->
+
+  <link name="l_stand_up1">
+    <visual>
+     <geometry>
+       <cylinder length="0.05" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="neon orange"/>
+    </visual>
+  </link>
+
+
+  <link name="l_stand_up2">
+    <visual>
+     <geometry>
+       <cylinder length="0.05" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="neon orange"/>
+    </visual>
+  </link>
+  
+  
+  <link name="l_stand_up3">
+    <visual>
+     <geometry>
+       <cylinder length="0.05" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="neon orange"/>
+    </visual>
+  </link>
+
+
+
+  <joint name="base_to_standup1" type="fixed">
+    <parent link="base_DK"/>
+    <child link="l_stand_up1"/>
+    <origin xyz="-0.13 0.035 0.025"/>
+  </joint>
+  
+  
+  <joint name="base_to_standup2" type="fixed">
+    <parent link="center"/>
+    <child link="l_stand_up2"/>
+    <origin xyz="0 0.055 0.025"/>
+  </joint>
+  
+  <joint name="base_to_standup3" type="fixed">
+    <parent link="base_DK"/>
+    <child link="l_stand_up3"/>
+    <origin xyz="0.10 0.035 0.025"/>
+  </joint>
+  
+
+
+
+ <link name="r_stand_up1">
+    <visual>
+     <geometry>
+       <cylinder length="0.05" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="neon orange"/>
+    </visual>
+  </link>
+
+
+  <link name="r_stand_up2">
+    <visual>
+     <geometry>
+       <cylinder length="0.05" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="neon orange"/>
+    </visual>
+  </link>
+  
+  
+  <link name="r_stand_up3">
+    <visual>
+     <geometry>
+       <cylinder length="0.05" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="neon orange"/>
+    </visual>
+  </link>
+   
+   
+    
+   <joint name="base_to_standup4" type="fixed">
+    <parent link="base_DK"/>
+    <child link="r_stand_up1"/>
+    <origin xyz="-0.13 -0.035 0.025"/>
+  </joint>
+  
+  
+  <joint name="base_to_standup5" type="fixed">
+    <parent link="center"/>
+    <child link="r_stand_up2"/>
+    <origin xyz="0 -0.055 0.025"/>
+  </joint>
+  
+  <joint name="base_to_standup6" type="fixed">
+    <parent link="base_DK"/>
+    <child link="r_stand_up3"/>
+    <origin xyz="0.10 -0.035 0.025"/>
+  </joint>    
+    
+  
+  
+  <!--   Stepper Motor   -->
+  
+  <link name="c_stand">
+    <visual>
+     <geometry>
+       <cylinder length="0.03" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="neon orange"/>
+    </visual>
+  </link>
+   
+   
+    
+   <joint name="base_to_c_stand" type="fixed">
+    <parent link="base_DK"/>
+    <child link="c_stand"/>
+    <origin xyz="0.055 0 0.015"/>
+  </joint>
+  
+  
+  <link name="base_stepper">
+    <visual>
+      <geometry>
+        <box size=".07 .035 .004"/>
+      </geometry>
+     <origin xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="c_stand_base_stepper" type="fixed">
+    <parent link="c_stand"/>
+    <child link="base_stepper"/>
+    <origin xyz="0.03 0 0.015"/>
+  </joint>
+  
+  
+  <link name="center1">
+    <visual>
+      <geometry>
+        <box size=".08 .02 .004"/>
+      </geometry>
+     <origin rpy="0 0 1.5705" xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="base_stepper_center1" type="fixed">
+    <parent link="base_stepper"/>
+    <child link="center1"/>
+    <origin xyz="0.015 0 0"/>
+  </joint>
+  
+  
+  <link name="l_corner_center1">
+    <visual>
+      <geometry>
+        <box size=".02 .02 .004"/>
+      </geometry>
+     <origin rpy="0 0 0.785" xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="center1_l_corner" type="fixed">
+    <parent link="center1"/>
+    <child link="l_corner_center1"/>
+    <origin xyz="0 0.035 0"/>
+  </joint>
+  
+  
+  <link name="r_corner_center1">
+    <visual>
+      <geometry>
+        <box size=".02 .02 .004"/>
+      </geometry>
+     <origin rpy="0 0 0.785" xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="center1_r_corner" type="fixed">
+    <parent link="center1"/>
+    <child link="r_corner_center1"/>
+    <origin xyz="0 -0.035 0"/>
+  </joint>
+  
+  
+<!--       Motor Box         -->
+  <link name="stepper">
+    <visual>
+      <geometry>
+        <box size=".04 .04 .02"/>
+      </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+     <material name="white"/>
+    </visual>
+  </link>
+  
+  <joint name="base_stepper_stepper" type="fixed">
+    <parent link="base_stepper"/>
+    <child link="stepper"/>
+    <origin xyz="-0.005 0 0.016"/>
+  </joint>
+  
+  <link name="stepper_shaft">
+    <visual>
+     <geometry>
+       <cylinder length="0.012" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="emerald"/>
+    </visual>
+  </link>
+  
+  <joint name="stepper_stepper_shaft" type="continuous">
+    <parent link="stepper"/>
+    <child link="stepper_shaft"/>
+    <origin xyz="-0.01 0 -0.02"/>
+  </joint>
+  
+  <link name="shaft_base1">
+    <visual>
+     <geometry>
+       <cylinder length="0.01" radius="0.0075"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="stepper_shaft_shaft_base1" type="fixed">
+    <parent link="stepper_shaft"/>
+    <child link="shaft_base1"/>
+    <origin xyz="0 0 -0.006"/>
+  </joint>
+  
+  <link name="shaft_base2">
+    <visual>
+      <geometry>
+        <box size=".02 .005 .01"/>
+      </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="shaft_base1_shaft_base2" type="fixed">
+    <parent link="shaft_base1"/>
+    <child link="shaft_base2"/>
+    <origin xyz="0.0075 0 -0.0025"/>
+  </joint>
+  
+  
+  <link name="shaft_base3">
+    <visual>
+      <geometry>
+        <box size=".028 .005 .005"/>
+      </geometry>
+     <origin rpy="0 0 1.5705" xyz="0 0 0"/>
+     <material name="blue"/>
+    </visual>
+  </link>
+  
+  <joint name="shaft_base2_shaft_base3" type="fixed">
+    <parent link="shaft_base2"/>
+    <child link="shaft_base3"/>
+    <origin xyz="0.0075 0 -0.00125"/>
+  </joint>
+  
+  
+  
+  <link name="base3_l_stand">
+    <visual>
+     <geometry>
+       <cylinder length="0.015" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="emerald"/>
+    </visual>
+  </link>
+  
+  <joint name="shaft_base3_l_stand" type="fixed">
+    <parent link="shaft_base3"/>
+    <child link="base3_l_stand"/>
+    <origin xyz="0 0.01 -0.0075"/>
+  </joint>
+  
+  
+  <link name="base3_r_stand">
+    <visual>
+     <geometry>
+       <cylinder length="0.015" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="emerald"/>
+    </visual>
+  </link>
+  
+  <joint name="shaft_base3_r_stand" type="fixed">
+    <parent link="shaft_base3"/>
+    <child link="base3_r_stand"/>
+    <origin xyz="0 -0.01 -0.0075"/>
+  </joint>
+
+
+<!--      Axels      -->
+
+  <link name="l_axel">
+    <visual>
+      <geometry>
+        <cylinder length="0.04" radius="0.0025"/>
+      </geometry>
+     <origin rpy="0 1.5705 2.356" xyz="0 0 0"/>
+     <material name="black"/>
+    </visual>
+  </link>
+  
+  <joint name="base3_stand_axel1" type="fixed">
+    <parent link="base3_l_stand"/>
+    <child link="l_axel"/>
+    <origin xyz="-0.0145 0.0145 0"/>
+  </joint>
+    
+  <link name="r_axel">
+    <visual>
+      <geometry>
+        <cylinder length="0.04" radius="0.0025"/>
+      </geometry>
+     <origin rpy="0 1.5705 -2.356" xyz="0 0 0"/>
+     <material name="black"/>
+    </visual>
+  </link>
+  
+  <joint name="base3_stand_axel2" type="fixed">
+    <parent link="base3_r_stand"/>
+    <child link="r_axel"/>
+    <origin xyz="-0.0145 -0.0145 0"/>
+  </joint>
+  
+  
+  <link name="l_axel_stand">
+    <visual>
+     <geometry>
+       <cylinder length="0.02" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="emerald"/>
+    </visual>
+  </link>
+  
+  <joint name="l_axel_to_stand" type="fixed">
+    <parent link="l_axel"/>
+    <child link="l_axel_stand"/>
+    <origin xyz="-0.0145 0.0145 0.005"/>
+  </joint>
+  
+  
+  <link name="r_axel_stand">
+    <visual>
+     <geometry>
+       <cylinder length="0.02" radius="0.0025"/>
+     </geometry>
+     <origin xyz="0 0 0"/>
+    <material name="emerald"/>
+    </visual>
+  </link>
+  
+  <joint name="r_axel_to_stand" type="fixed">
+    <parent link="r_axel"/>
+    <child link="r_axel_stand"/>
+    <origin xyz="-0.0145 -0.0145 0.005"/>
+  </joint>
+  
+  
+  
+  <link name="l_joint_axel0">
+    <visual>
+      <geometry>
+        <box size=".005 .005 .0025"/>
+      </geometry>
+     <origin rpy="0 0 0" xyz="0 0 0"/>
+     <material name="white"/>
+    </visual>
+  </link>
+  
+  <joint name="l_axel_stand_l_joint0" type="fixed">
+    <parent link="l_axel_stand"/>
+    <child link="l_joint_axel0"/>
+    <origin xyz="0.0025 0 0.005"/>
+  </joint>
+  
+  
+  <link name="l_joint_axel1">
+    <visual>
+      <geometry>
+        <box size=".04 .005 .0025"/>
+      </geometry>
+     <origin rpy="0 0 0.262" xyz="0 0 0"/>
+     <material name="white"/>
+    </visual>
+  </link>
+  
+  <joint name="l_joint_axel0_l_joint1" type="fixed">
+    <parent link="l_joint_axel0"/>
+    <child link="l_joint_axel1"/>
+    <origin xyz="0.0193 0.0051 0"/>
+  </joint>
+  
+  
+  
+  <link name="r_joint_axel0">
+    <visual>
+      <geometry>
+        <box size=".005 .005 .0025"/>
+      </geometry>
+     <origin rpy="0 0 0" xyz="0 0 0"/>
+     <material name="white"/>
+    </visual>
+  </link>
+  
+  <joint name="r_axel_stand_r_joint0" type="fixed">
+    <parent link="r_axel_stand"/>
+    <child link="r_joint_axel0"/>
+    <origin xyz="0.0025 0 0.005"/>
+  </joint>
+  
+  
+  <link name="r_joint_axel1">
+    <visual>
+      <geometry>
+        <box size=".04 .005 .0025"/>
+      </geometry>
+     <origin rpy="0 0 -0.262" xyz="0 0 0"/>
+     <material name="white"/>
+    </visual>
+  </link>
+  
+  <joint name="r_joint_axel0_r_joint1" type="fixed">
+    <parent link="r_joint_axel0"/>
+    <child link="r_joint_axel1"/>
+    <origin xyz="0.0193 -0.0051 0"/>
+  </joint>
+  
+
+</robot>
