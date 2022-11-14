@@ -1,0 +1,121 @@
+joint_state_controller: 
+
+    # Publish all joint states ----------------------------------- 
+
+    joint_state_pub: 
+      type: joint_state_controller/JointStateController 
+      publish_rate: 10 
+
+
+joint_position_controllers: 
+
+    # Position Controllers --------------------------------------- 
+
+    left_position_controller: 
+      type: velocity_controllers/JointPositionController 
+      joint: l_motor_shaft 
+      pid: {p: 4, i: 0.5, d: -0.1} 
+
+       
+
+    right_position_controller: 
+      type: velocity_controllers/JointPositionController 
+      joint: r_motor_shaft
+      pid: {p: 4, i: 0.5, d: -0.1} 
+
+       
+
+    front_position_controller: 
+      type: velocity_controllers/JointPositionController 
+      joint: stepper_stepper_shaft
+      pid: {p: 3, i: 0.5, d: -0.6} 
+
+
+      
+
+
+    
+# Trajectory Controller --------------------------------------- 
+
+robot_trajectory_controller: 
+
+    trajectory_controller:
+        type: velocity_controllers/JointTrajectoryController 
+        joints:  
+            - l_motor_shaft
+            - r_motor_shaft 
+            - stepper_stepper_shaft 
+
+        constraints: 
+            goal_time: 2.0 
+            stopped_velocity_tolerance: 0.001 
+            l_motor_shaft:  
+                trajectory: 10.0 
+                goal: 10.0 
+            r_motor_shaft:  
+                trajectory: 10.0 
+                goal: 10.0 
+            stepper_stepper_shaft :  
+                trajectory: 10.0 
+                goal: 10.0 
+            stop_trajectory_duration: 0.5 
+
+        gains:  
+            l_motor_shaft: {p: 4, i: 0.5, d: -0.1} 
+            r_motor_shaft: {p: 4, i: 0.5, d: -0.1} 
+            stepper_stepper_shaft: {p: 10, i: 0, d: 0.6} 
+            
+      
+      
+      
+# Differential Driver Controller --------------------------------------- 
+
+
+diff_drive_controller: 
+
+    # Publish all joint states ----------------------------------- 
+
+    mobile_base_controller:
+          type        : "diff_drive_controller/DiffDriveController"
+          left_wheel  : 'l_motor_shaft'
+          right_wheel : 'r_motor_shaft'
+          publish_rate: 50.0               # default: 50
+          pose_covariance_diagonal : [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+          twist_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+
+          # Wheel separation and diameter. These are both optional.
+          # diff_drive_controller will attempt to read either one or both from the
+          # URDF if not specified as a parameter
+          wheel_separation : 0.24
+          wheel_radius : 0.04
+
+          # Wheel separation and radius multipliers
+          wheel_separation_multiplier: 1.0 # default: 1.0
+          wheel_radius_multiplier    : 1.0 # default: 1.0
+
+          # Velocity commands timeout [s], default 0.5
+          cmd_vel_timeout: 0.25
+
+          # Base frame_id
+          base_frame_id: base_footprint #default: base_link
+
+          # Velocity and acceleration limits
+          # Whenever a min_* is unspecified, default to -max_*
+          linear:
+            x:
+              has_velocity_limits    : true
+              max_velocity           : 1.0  # m/s
+              min_velocity           : -0.5 # m/s
+              has_acceleration_limits: true
+              max_acceleration       : 0.8  # m/s^2
+              min_acceleration       : -0.4 # m/s^2
+              has_jerk_limits        : true
+              max_jerk               : 5.0  # m/s^3
+          angular:
+            z:
+              has_velocity_limits    : true
+              max_velocity           : 1.7  # rad/s
+              has_acceleration_limits: true
+              max_acceleration       : 1.5  # rad/s^2
+              has_jerk_limits        : true
+              max_jerk               : 2.5  # rad/s^3
