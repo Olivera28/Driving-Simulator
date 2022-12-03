@@ -4,7 +4,6 @@ from std_msgs.msg import UInt32
 from cse400_msgs.msg import Command
 from cse400_msgs.msg import Motor
 from cse400_msgs.msg import IMU
-#from cse400_msgs.msg import Range3
 import math
 
 class Teensy_Sim:
@@ -47,15 +46,11 @@ class Teensy_Sim:
 		self.w = 0.0
 		self.front_pos = 0.0
 		self.front_vel = 0.0
-		#self.elbow_pos = 0.0
-		#self.elbow_vel = 0.0
 
 		# motor velocity setpoints
 		self.left_set = 0.0
 		self.right_set = 0.0
 		self.front_set = 0.0
-		#\self.shoulder_set = 0.0
-		#self.elbow_set = 0.0
 				
 		# subscriber variables
 		self.sub_cmd = rospy.Subscriber("teensy/Commands", Command, self.cmd_Cb)
@@ -65,8 +60,7 @@ class Teensy_Sim:
 		self.cmd = cmd
 		self.left_set = self.limit(self.cmd.left_vel, self.WHEEL_MAXVEL)
 		self.right_set = self.limit(self.cmd.right_vel, self.WHEEL_MAXVEL)
-		self.front_set = self.limit(self.cmd.front_vel, self.FRONT_MAXVEL)
-		#self.elbow_set = self.limit(self.cmd.elbow_vel, self.ARM_MAXVEL)
+		self.front_set = self.limit(self.cmd.front_vel, self.ARM_MAXVEL)
 
 	def limit(self, set_vel, max_vel):
 		if set_vel > max_vel:
@@ -83,9 +77,7 @@ class Teensy_Sim:
 		self.right_vel = self.accelerate_motor(self.right_set, self.right_vel, self.WHEEL_DELTA_V)
 		self.right_pos += self.right_vel * self.ROS_period
 		self.front_vel = self.accelerate_motor(self.front_set, self.front_vel, self.FRONT_DELTA_V)
-		self.front_pos += self.front_vel * self.ROS_period
-		#self.elbow_vel = self.accelerate_motor(self.elbow_set, self.elbow_vel, self.ARM_DELTA_V)
-		#self.elbow_pos += self.elbow_vel * self.ROS_period
+		self.front_pos += self.shoulder_vel * self.ROS_period
 		self.prev_w = self.w
 		self.w = (self.right_vel - self.left_vel) * self.TIRE_SCALE1
 		self.prev_v = self.v
@@ -106,31 +98,6 @@ class Teensy_Sim:
 				vel = setpoint
 		return vel
 
-	def detect_range(self):
-		distance = [self.MAX_DISTANCE] * len(self.RANGE_ANGLES)
-		if self.SEGMENTS == []:
-			return distance
-		x = self.x + self.BASE_SENSOR_OFFSET * math.cos(self.theta)
-		y = self.y + self.BASE_SENSOR_OFFSET * math.sin(self.theta)
-		range_angle = 0
-		for angle in self.RANGE_ANGLES:
-			for segment in self.SEGMENTS:
-				a1 = self.MAX_DISTANCE * math.cos(self.theta + angle)
-				b1 = segment[0] - segment[2]
-				a2 = self.MAX_DISTANCE * math.sin(self.theta + angle)
-				b2 = segment[1] - segment[3]
-				if a1*b2!=a2*b1:
-					c1 = segment[0] - x*1000
-					c2 = segment[1] - y*1000
-					s0 = (c1*b2-c2*b1)/(a1*b2-a2*b1)
-					if 0 <= s0 <= 1:
-						t0 = (a1*c2-a2*c1)/(a1*b2-a2*b1)
-						if 0 <= t0 <= 1:
-							d = s0*math.sqrt(a1*a1+a2*a2)
-							if d < distance[range_angle]:
-								distance[range_angle] = int(d)
-			range_angle += 1
-		return distance
 
 rospy.init_node('Teensy_sim', anonymous=True)
 
@@ -139,12 +106,12 @@ simulator = Teensy_Sim()
 pub_millis = rospy.Publisher("teensy/Millis", UInt32, queue_size=10)
 pub_motors = rospy.Publisher("teensy/Motors", Motor, queue_size=10)
 pub_IMU = rospy.Publisher("teensy/IMU", IMU, queue_size=10)
-#pub_range = rospy.Publisher("teensy/Range", Range3, queue_size=10)
+
 
 millis_to_ROS = UInt32()
-motor_msg = Motsor()
+motor_msg = Motor()
 IMU_msg = IMU()
-#range_msg = Range3()
+
 
 rate = rospy.Rate(simulator.ROS_rate)
 ticks = 0
@@ -177,17 +144,7 @@ while not rospy.is_shutdown():
 		motor_msg.right_vel = simulator.right_vel
 		motor_msg.front_pos = simulator.front_pos
 		motor_msg.front_vel = simulator.front_vel
-		#motor_msg.elbow_pos = simulator.elbow_pos
-		#motor_msg.elbow_vel = simulator.elbow_vel
 		pub_motors.publish(motor_msg)
-	"""
-  if (ticks + 5) % 8 == 0:
-		d = simulator.detect_range()
-		range_msg.left = d[0]
-		range_msg.center = d[1]
-		range_msg.right = d[2]
-		pub_range.publish(range_msg)
-	"""
-  if ticks == 7:
+	if ticks == 7:
 		pub_millis.publish(millis_to_ROS)
 	rate.sleep()
