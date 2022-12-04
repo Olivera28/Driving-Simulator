@@ -11,7 +11,6 @@ void setup() {
 }
 
 void loop() {
-  //Serial.println("n!");
   //Read value of potentiometer from analog input pin A0
   Speed = analogRead(A0);
   //Create conversion scale
