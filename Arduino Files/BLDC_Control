@@ -1,0 +1,22 @@
+#include <Servo.h>
+Servo myservo;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  myservo.attach(9); //PWM Pin Connection
+  delay(1);
+  myservo.write(10); //DO NOT CHANGE! Require to activate ESC
+  delay(5000);       //Mandatory Wait Time
+  
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  While (Serial.available() > 0)
+  {
+    int val = Serial.parseInt(); //reads integer values sent through serial monitor
+    Serial.print(val);           //Displays read int value
+    myservo.write(val);          //Writes read int value to ESC
+    }
+}
