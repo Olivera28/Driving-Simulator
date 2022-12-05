@@ -17,6 +17,7 @@ void loop() {
   {
     int val = Serial.parseInt(); //reads integer values sent through serial monitor
     Serial.print(val);           //Displays read int value
+    Serial.print("\n");
     myservo.write(val);          //Writes read int value to ESC
     }
 }
