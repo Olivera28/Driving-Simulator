@@ -70,7 +70,7 @@ void loop() {
       val_drive = 90;
     }
     else if(turn_l == 1){
-      val_turn = 150;
+      val_turn = 190;
       val_drive = 90;
     }
     else{
