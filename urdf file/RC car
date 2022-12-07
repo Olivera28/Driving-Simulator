@@ -271,52 +271,32 @@
   </joint> 
   
   
-  
-  
 
-<!--2 DC motors --->
-
-<link name="l_wheel_motor">
-    <visual>
-     <geometry>
-       <cylinder length="0.02" radius="0.015"/>
-     </geometry>
-     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
-    <material name="white"/>
-    </visual>
-  </link>
-
-
-  <joint name="base_to_l_wheel_motor" type="fixed">
-    <parent link="base_DK"/>
-    <child link="l_wheel_motor"/>
-    <origin xyz="-0.10 0.03 0.015"/>
-  </joint>
-
-
-<link name="r_wheel_motor">
-    <visual>
-     <geometry>
-       <cylinder length="0.02" radius="0.015"/>
-     </geometry>
-     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
-    <material name="white"/>
-    </visual>
-  </link>
-
-
-  <joint name="base_to_r_wheel_motor" type="fixed">
-    <parent link="base_DK"/>
-    <child link="r_wheel_motor"/>
-    <origin xyz="-0.10 -0.03 0.015"/>
-  </joint>
   
   
 <!--DC Motor shafts --->  
-<link name="l_shaft">
+  <link name="c_motor">
     <visual>
      <geometry>
-       <cylinder length="0.022" radius="0.0025"/>
+       <cylinder length="0.02" radius="0.015"/>
+     </geometry>
+     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
+    <material name="white"/>
+    </visual>
+  </link>
+
+
+  <joint name="base_to_c_motor" type="fixed">
+    <parent link="base_DK"/>
+    <child link="c_motor"/>
+    <origin xyz="-0.10 0 0.015"/>
+  </joint>
+
+
+<link name="center_shaft">
+    <visual>
+     <geometry>
+       <cylinder length="0.124" radius="0.0025"/>
      </geometry>
      <origin rpy="1.5705 0 0" xyz="0 0 0"/>
     <material name="coral"/>
@@ -324,30 +304,13 @@
   </link>
 
 
-  <joint name="l_motor_shaft" type="continuous">
-    <parent link="l_wheel_motor"/>
-    <child link="l_shaft"/>
-    <origin xyz="0 0.021 0"/>
+  <joint name="rear_shaft" type="continuous">
+    <parent link="c_motor"/>
+    <child link="center_shaft"/>
+    <origin xyz="0 0 0"/>
+    <axis xyz="0 -1 0"/>
   </joint>
-  
 
-
-<link name="r_shaft">
-    <visual>
-     <geometry>
-       <cylinder length="0.022" radius="0.0025"/>
-     </geometry>
-     <origin rpy="1.5705 0 0" xyz="0 0 0"/>
-    <material name="coral"/>
-    </visual>
-  </link>
-
-
-  <joint name="r_motor_shaft" type="continuous">
-    <parent link="r_wheel_motor"/>
-    <child link="r_shaft"/>
-    <origin xyz="0 -0.021 0"/>
-  </joint>
 
 
 <!--       Back Wheels          --->
@@ -364,9 +327,9 @@
 
 
   <joint name="base_to_l_b_wheel" type="fixed">
-    <parent link="l_shaft"/>
+    <parent link="center_shaft"/>
     <child link="l_b_wheel"/>
-    <origin xyz="0 0.02 0"/>
+    <origin xyz="0 0.062 0"/>
   </joint> 
   
   
@@ -382,9 +345,9 @@
 
 
   <joint name="base_to_r_b_wheel" type="fixed">
-    <parent link="r_shaft"/>
+    <parent link="center_shaft"/>
     <child link="r_b_wheel"/>
-    <origin xyz="0 -0.02 0"/>
+    <origin xyz="0 -0.062 0"/>
   </joint> 
   
   
@@ -659,6 +622,7 @@
     <parent link="stepper"/>
     <child link="stepper_shaft"/>
     <origin xyz="-0.01 0 -0.02"/>
+    <axis xyz ="0 0 -1"/>
   </joint>
   
   <link name="shaft_base1">
