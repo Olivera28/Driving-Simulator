@@ -1,0 +1,302 @@
+/* 
+
+ * Syracuse University Robotics Programming Course 
+
+ */ 
+
+ 
+
+#include <ros.h> 
+#include <std_msgs/UInt32.h> 
+#include <cse400_msgs/Command.h> 
+#include <cse400_msgs/Motor.h> 
+#include <cse400_msgs/IMU.h> 
+#include <cse400_msgs/Range3.h> 
+#include <Wire.h> 
+#include <AccelStepper.h> 
+#include <Adafruit_Sensor.h> 
+#include <Adafruit_BNO055.h> 
+#include <OPT3101.h> 
+
+ 
+
+unsigned long check_tick_time = millis(); 
+unsigned int number_ticks = 0; 
+AccelStepper wheel_left(AccelStepper::FULL4WIRE, 14, 15, 16, 17); 
+AccelStepper wheel_right(AccelStepper::FULL4WIRE, 23, 22, 21, 20); 
+AccelStepper arm_shoulder(AccelStepper::FULL4WIRE, 2, 4, 3, 5); 
+AccelStepper arm_elbow(AccelStepper::FULL4WIRE, 9, 11, 10, 12); 
+
+float scale_wheel_angle = 100.0/3.14159; 
+float scale_wheel_steps = 3.14159/100.0; 
+float scale_arm_angle = 1019.0/3.14159; 
+float scale_arm_steps = 3.14159/1019.0; 
+
+int wheel_left_ticks = 0; 
+int wheel_right_ticks = 0; 
+int arm_shoulder_ticks = 0; 
+int arm_elbow_ticks = 0; 
+
+Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x28); 
+
+imu::Vector<3> accel; 
+imu::Vector<3> gyro; 
+imu::Quaternion quat; 
+
+OPT3101 Range_sensor; 
+
+float sensor_left = 0.0; 
+float sensor_mid = 0.0; 
+float sensor_right = 0.0; 
+
+ 
+
+ros::NodeHandle  nh; 
+
+ 
+
+void messageCb(const cse400_msgs::Command& cmd) {
+
+  wheel_left.setSpeed(scale_wheel_angle*cmd.left_vel); 
+  wheel_right.setSpeed(scale_wheel_angle*cmd.right_vel); 
+  arm_shoulder.setSpeed(scale_arm_angle*cmd.shoulder_vel); 
+  arm_elbow.setSpeed(scale_arm_angle*cmd.elbow_vel); 
+  digitalWrite(13, HIGH-digitalRead(13));   // toggle the led 
+
+} 
+
+ 
+
+ros::Subscriber<cse400_msgs::Command> cmd_sub("teensy/Commands", messageCb); 
+
+ 
+
+std_msgs::UInt32 millis_to_ROS; 
+cse400_msgs::Motor motor_msg; 
+cse400_msgs::IMU IMU_msg; 
+cse400_msgs::Range3 Range_msg; 
+
+ 
+
+ros::Publisher millis_publisher("teensy/Millis", &millis_to_ROS); 
+ros::Publisher motor_publisher("teensy/Motors", &motor_msg); 
+ros::Publisher IMU_publisher("teensy/IMU", &IMU_msg); 
+ros::Publisher Range_publisher("teensy/Range", &Range_msg); 
+
+ 
+
+void setup() 
+
+{ 
+
+  wheel_left.disableOutputs(); 
+  wheel_right.disableOutputs(); 
+  arm_shoulder.disableOutputs(); 
+  arm_elbow.disableOutputs(); 
+
+  pinMode(13, OUTPUT); 
+
+  Wire.begin(); 
+
+  nh.initNode(); 
+  nh.subscribe(cmd_sub); 
+  nh.advertise(millis_publisher); 
+  nh.advertise(motor_publisher); 
+  nh.advertise(IMU_publisher); 
+  nh.advertise(Range_publisher); 
+
+  wheel_left.setMaxSpeed(400); 
+  wheel_left.setAcceleration(50); 
+  wheel_right.setMaxSpeed(400); 
+  wheel_right.setAcceleration(50); 
+
+  arm_shoulder.setMaxSpeed(50); 
+  arm_shoulder.setAcceleration(10); 
+  arm_elbow.setMaxSpeed(50); 
+  arm_elbow.setAcceleration(10); 
+
+  bno.begin(); 
+
+  delay(1000); 
+
+  bno.setExtCrystalUse(true); 
+
+  Range_sensor.init(); 
+  Range_sensor.setFrameTiming(256); 
+  Range_sensor.setChannel(0); 
+  Range_sensor.setBrightness(OPT3101Brightness::Adaptive); 
+  Range_sensor.startSample(); 
+
+} 
+
+ 
+
+void loop() 
+
+{ 
+
+  // Code inside this if statement runs once every 25 milliseconds 
+
+  if ((millis() - check_tick_time) >= 25) { 
+    check_tick_time = check_tick_time + 25; 
+    number_ticks++; 
+    number_ticks = number_ticks % 32; 
+
+ 
+
+    // Check if motors are idle for more than 10 seconds 
+    // If they are, turn them off to conserve battery power 
+
+    if (abs(wheel_left.speed()) < 0.001) { 
+      wheel_left_ticks++; 
+
+      if (wheel_left_ticks > 400) { 
+        wheel_left.disableOutputs(); 
+        wheel_left_ticks = 0; 
+      } 
+
+    } else { 
+      wheel_left_ticks = 0; 
+    } 
+
+    if (abs(wheel_right.speed()) < 0.001) { 
+      wheel_right_ticks++; 
+
+      if (wheel_right_ticks > 400) { 
+        wheel_right.disableOutputs(); 
+        wheel_right_ticks = 0; 
+
+      } 
+
+    } else { 
+      wheel_right_ticks = 0; 
+    } 
+
+    if (abs(arm_shoulder.speed()) < 0.001) { 
+      arm_shoulder_ticks++; 
+
+      if (arm_shoulder_ticks > 400) { 
+        arm_shoulder.disableOutputs(); 
+        arm_shoulder_ticks = 0; 
+
+      } 
+
+    } else { 
+      arm_shoulder_ticks = 0; 
+    } 
+
+    if (abs(arm_elbow.speed()) < 0.001) { 
+      arm_elbow_ticks++; 
+
+      if (arm_elbow_ticks > 400) { 
+        arm_elbow.disableOutputs(); 
+        arm_elbow_ticks = 0; 
+
+      } 
+
+    } else { 
+      arm_elbow_ticks = 0; 
+    } 
+
+     
+
+    switch (number_ticks) { 
+
+      // IMU read and published every 50ms; 20Hz 
+      case 0: case 2: case 4: case 6: case 8: case 10: case 12: case 14: 
+      case 16: case 18: case 20: case 22: case 24: case 26: case 28: case 30: 
+        quat = bno.getQuat(); 
+        gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE); 
+        accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL); 
+        
+        IMU_msg.quat_w = quat.w(); 
+        IMU_msg.quat_x = quat.x(); 
+        IMU_msg.quat_y = quat.y(); 
+        IMU_msg.quat_z = quat.z(); 
+        IMU_msg.rot_x = gyro.x(); 
+        IMU_msg.rot_y = gyro.y(); 
+        IMU_msg.rot_z = gyro.z(); 
+        IMU_msg.accel_x = accel.x(); 
+        IMU_msg.accel_y = accel.y(); 
+        IMU_msg.accel_z = accel.z(); 
+        IMU_publisher.publish(&IMU_msg); 
+
+      break; 
+
+      // Motor velocities published every 100ms; 10Hz 
+      case 1: case 5: case 9: case 13: case 17: case 21: case 25: case 29: 
+        motor_msg.left_pos = scale_wheel_steps*wheel_left.currentPosition(); 
+        motor_msg.left_vel = scale_wheel_steps*wheel_left.speed(); 
+        motor_msg.right_pos = scale_wheel_steps*wheel_right.currentPosition(); 
+        motor_msg.right_vel = scale_wheel_steps*wheel_right.speed(); 
+        motor_msg.shoulder_pos = scale_arm_steps*arm_shoulder.currentPosition(); 
+        motor_msg.shoulder_vel = scale_arm_steps*arm_shoulder.speed(); 
+        motor_msg.elbow_pos = scale_arm_steps*arm_elbow.currentPosition(); 
+        motor_msg.elbow_vel = scale_arm_steps*arm_elbow.speed(); 
+        motor_publisher.publish(&motor_msg); 
+
+      break; 
+
+      // Range sensor data read and published every 200ms; 5Hz 
+      case 3: case 11: case 19: case 27: 
+        Range_msg.left = sensor_left; 
+        Range_msg.center = sensor_mid; 
+        Range_msg.right = sensor_right; 
+        Range_publisher.publish(&Range_msg); 
+
+      break; 
+
+      // Millis published every 800ms; 1.25Hz 
+      case 7: 
+        millis_to_ROS.data = millis(); 
+        millis_publisher.publish(&millis_to_ROS); 
+
+      break; 
+
+    } 
+
+  } 
+
+ 
+
+  // Poll OPT3101 to see if it has finished a frame 
+  // new frame every 0.25m sec x 256 averages x 3 channels = 5.2Hz 
+
+  if (Range_sensor.isSampleDone()) 
+
+  { 
+
+    Range_sensor.readOutputRegs(); 
+    switch (Range_sensor.channelUsed) { 
+
+      // Left channel 
+      case 0: 
+        sensor_left = Range_sensor.distanceMillimeters; 
+      break; 
+      // Middle channel 
+      case 1: 
+        sensor_mid = Range_sensor.distanceMillimeters; 
+      break; 
+      // Right channel 
+      case 2: 
+        sensor_right = Range_sensor.distanceMillimeters; 
+      break; 
+    } 
+
+    Range_sensor.nextChannel(); 
+    Range_sensor.startSample(); 
+
+  } 
+
+ 
+
+  // must continue to call runspeed to keep motors spinning 
+  wheel_left.runSpeed(); 
+  wheel_right.runSpeed(); 
+  arm_shoulder.runSpeed(); 
+  arm_elbow.runSpeed(); 
+
+  // continue ROS callbacks 
+  nh.spinOnce(); 
+
+} 
