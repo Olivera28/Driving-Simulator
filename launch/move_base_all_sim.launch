@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+
+<launch>
+
+<!-- load the URDF file on the parameter server --> 
+    <param name="robot_description" textfile="$(find cse400_robot)/urdf/robot.urdf"/>
+
+<!-- load the simulated room object yaml file on the parameter server 
+    <rosparam file="$(find cse400_robot)/map/room_objects.yaml" command="load"/>
+-->
+<!-- Run the teensy simulation node  -->
+	<param name="base_dir" value="$(find cse400_robot)/scripts"/>
+	<node name="teensy_sim" pkg="cse400_robot" type="teensy_sim.py" output="screen"/>
+		
+    <!--
+	<node name="serial_node" pkg="rosserial_python" type="serial_node.py">
+	<param name="port" value="/dev/ttyACM0"/>
+	</node>
+	-->
+	
+<!-- Run the robot state publisher --> 
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+<!-- Run the hardware interface node --> 
+	<node name="hw_interface_node" pkg="cse400_robot" type="hw_interface_node" output="screen"/>
+
+<!-- Load the controller yaml file on the parameter server --> 	
+	<rosparam file="$(find cse400_robot)/config/joint_control_params.yaml" command="load"/>
+	
+<!-- Run the controller spawner --> 
+	<node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen"
+		args="/joint_state_controller/joint_state_pub
+    		/ackermann_steering_controller/mobile_base_controller"/>
+
+<!-- Run the fake localization node for the map to odom transform -->
+    <remap from="/base_pose_ground_truth" to="/ackermann_steering_controller/mobile_base_controller/odom" />
+    <node name="fake_localization" pkg="fake_localization" type="fake_localization" >
+        <rosparam file="$(find cse400_robot)/config/fake_localization.yaml" command="load"/>
+	</node>
+	
+<!-- Run the node to convert IMU messages and LIDAR messages from teensy format to ROS format 
+	<node name="teensy_to_ros" pkg="cse400_robot" type="teensy_to_ros.py"/>
+--> 
+
+<!-- Load Robot Localization Parameters on the parameter server-->
+    <rosparam file="$(find cse400_robot)/config/localization_params.yaml"  command = "load" />
+  
+<!-- Robot Localization -
+    <node name="ekf_global" pkg="robot_localization" type="ekf_localization_node" >
+        <rosparam param="initial_state">[0.0,  0.0,  0.0,
+                                         0.0,  0.0,  0.0,
+                                         0.0,  0.0,  0.0,
+                                         0.0,  0.0,  0.0,
+                                         0.0,  0.0,  0.0]</rosparam>
+    </node>
+    -->
+<!-- Run the map server -->
+	<node name="map_server" pkg="map_server" type="map_server" 
+		args="$(find cse400_robot)/map/map_config.yaml"/> 
+	
+<!-- Run the move base node -->
+    <remap from="/cmd_vel" to="/ackermann_steering_controller/mobile_base_controller/cmd_vel" />
+    <remap from="/odom" to="/ackermann_steering_controller/mobile_base_controller/odom" />
+    <rosparam file= "$(find cse400_robot)/config/move_base_params.yaml" command="load"/>
+    <node name="move_base" pkg="move_base" type="move_base" clear_params="true" output="screen" >
+        <rosparam file= "$(find cse400_robot)/config/base_global_planner_params.yaml" command="load"/>
+        <rosparam file= "$(find cse400_robot)/config/base_local_planner_params.yaml" command="load"/>
+        <rosparam file= "$(find cse400_robot)/config/costmap_common_params.yaml" command="load" ns="global_costmap"/>
+        <rosparam file= "$(find cse400_robot)/config/costmap_common_params.yaml" command="load" ns="local_costmap"/>
+        <rosparam file= "$(find cse400_robot)/config/global_costmap_params.yaml" command="load"/>
+        <rosparam file= "$(find cse400_robot)/config/local_costmap_params.yaml" command="load"/>
+    
+    </node>
+
+<!-- Run RVIZ with it's configuartion file --> 
+    <node name="rviz" pkg="rviz" type="rviz"/>
+	
+</launch>

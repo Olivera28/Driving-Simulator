@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+   <node name="teensy_sim" pkg="cse400_robot" type="teensy_sim.py" output="screen"/>
+   
+   <node name="lookup_transform" pkg="cse400_robot" type="lookup_transform.py"/>
+   
+</launch>
