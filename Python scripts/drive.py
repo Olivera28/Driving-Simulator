@@ -22,34 +22,13 @@ GPIO.setup(turn_l,GPIO.OUT)
 while True:
     val = input("Enter command: ")
     
-    if val == "r":
-        GPIO.output(drive_f,0)
-        GPIO.output(drive_b,0)
-        GPIO.output(turn_r,1)
-        GPIO.output(turn_l,0)
-        sleep(1)
-
-    elif val == "l":
-        GPIO.output(drive_f,0)
-        GPIO.output(drive_b,0)
-        GPIO.output(turn_r,0)
-        GPIO.output(turn_l,1)
-        sleep(1)
-        
-    elif val == "c":
-        GPIO.output(drive_f,0)
-        GPIO.output(drive_b,0)
-        GPIO.output(turn_r,0)
-        GPIO.output(turn_l,0)
-        sleep(1)
-        
-    elif val == "d":
+    if val == "d":
         GPIO.output(drive_f,1)
         GPIO.output(drive_b,0)
         GPIO.output(turn_r,0)
         GPIO.output(turn_l,0)
         sleep(1)
-        
+
     elif val == "b":
         GPIO.output(drive_f,0)
         GPIO.output(drive_b,1)
@@ -57,13 +36,29 @@ while True:
         GPIO.output(turn_l,0)
         sleep(1)
         
-        
-    elif val == "dr":
-        GPIO.output(drive_f,1)
+    elif val == "s":
+        GPIO.output(drive_f,0)
         GPIO.output(drive_b,0)
         GPIO.output(turn_r,0)
         GPIO.output(turn_l,0)
-        sleep(3)
+        sleep(1)
+        
+    elif val == "r":
+        GPIO.output(drive_f,0)
+        GPIO.output(drive_b,0)
+        GPIO.output(turn_r,1)
+        GPIO.output(turn_l,0)
+        sleep(1)
+        
+    elif val == "l":
+        GPIO.output(drive_f,0)
+        GPIO.output(drive_b,0)
+        GPIO.output(turn_r,0)
+        GPIO.output(turn_l,1)
+        sleep(1)
+        
+        
+    elif val == "dr":
         GPIO.output(drive_f,1)
         GPIO.output(drive_b,0)
         GPIO.output(turn_r,1)
@@ -74,10 +69,19 @@ while True:
         GPIO.output(drive_f,1)
         GPIO.output(drive_b,0)
         GPIO.output(turn_r,0)
+        GPIO.output(turn_l,1)
+        sleep(1)
+        
+    elif val == "br":
+        GPIO.output(drive_f,0)
+        GPIO.output(drive_b,1)
+        GPIO.output(turn_r,1)
         GPIO.output(turn_l,0)
-        sleep(3)
-        GPIO.output(drive_f,1)
-        GPIO.output(drive_b,0)
+        sleep(1)
+            
+    elif val == "bl":
+        GPIO.output(drive_f,0)
+        GPIO.output(drive_b,1)
         GPIO.output(turn_r,0)
         GPIO.output(turn_l,1)
         sleep(1)     
