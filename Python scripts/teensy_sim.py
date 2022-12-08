@@ -26,16 +26,12 @@ class Teensy_Sim:
 		self.WHEEL_DELTA_V = self.WHEEL_ACCEL * self.ROS_period
 		self.FRONT_DELTA_V = self.FRONT_ACCEL * self.ROS_period
 		
-		# range constants
-		self.MAX_DISTANCE = 500 # millimeters
-		self.RANGE_ANGLES = [math.radians(-55), math.radians(0), math.radians(55)]
-		self.SEGMENTS = rospy.get_param('teensy/segments', [])
-
+		
 		# robot state variables
-		self.left_pos = 0.0
-		self.left_vel = 0.0
-		self.right_pos = 0.0
-		self.right_vel = 0.0
+		self.front_pos = 0.0
+		self.front_vel = 0.0
+		self.rear_pos = 0.0
+		self.rear_vel = 0.0
 		self.x = 0.0
 		self.y = 0.0
 		self.prev_v = 0.0
@@ -44,13 +40,11 @@ class Teensy_Sim:
 		self.theta = 0.0
 		self.prev_w = 0.0
 		self.w = 0.0
-		self.front_pos = 0.0
-		self.front_vel = 0.0
+		
 
 		# motor velocity setpoints
-		self.left_set = 0.0
-		self.right_set = 0.0
 		self.front_set = 0.0
+		self.rear_set = 0.0
 				
 		# subscriber variables
 		self.sub_cmd = rospy.Subscriber("teensy/Commands", Command, self.cmd_Cb)
@@ -58,9 +52,8 @@ class Teensy_Sim:
 
 	def cmd_Cb(self, cmd):
 		self.cmd = cmd
-		self.left_set = self.limit(self.cmd.left_vel, self.WHEEL_MAXVEL)
-		self.right_set = self.limit(self.cmd.right_vel, self.WHEEL_MAXVEL)
-		self.front_set = self.limit(self.cmd.front_vel, self.ARM_MAXVEL)
+		self.front_set = self.limit(self.cmd.front_vel, self.FRONT_MAXVEL)
+		self.rear_set = self.limit(self.cmd.rear_vel, self.WHEEL_MAXVEL)
 
 	def limit(self, set_vel, max_vel):
 		if set_vel > max_vel:
@@ -72,16 +65,14 @@ class Teensy_Sim:
 		return limit_set
 	
 	def update_robot_state(self):
-		self.left_vel = self.accelerate_motor(self.left_set, self.left_vel, self.WHEEL_DELTA_V)
-		self.left_pos += self.left_vel * self.ROS_period
-		self.right_vel = self.accelerate_motor(self.right_set, self.right_vel, self.WHEEL_DELTA_V)
-		self.right_pos += self.right_vel * self.ROS_period
 		self.front_vel = self.accelerate_motor(self.front_set, self.front_vel, self.FRONT_DELTA_V)
-		self.front_pos += self.shoulder_vel * self.ROS_period
+		self.front_pos += self.front_vel * self.ROS_period
+		self.rear_vel = self.accelerate_motor(self.rear_set, self.rear_vel, self.WHEEL_DELTA_V)
+		self.rear_pos += self.rear_vel * self.ROS_period
 		self.prev_w = self.w
-		self.w = (self.right_vel - self.left_vel) * self.TIRE_SCALE1
+		self.w = (self.rear_vel) * self.TIRE_SCALE1
 		self.prev_v = self.v
-		self.v = (self.right_vel + self.left_vel) * self.TIRE_SCALE2
+		self.v = (self.rear_vel) * self.TIRE_SCALE2
 		self.a = (self.v - self.prev_v) * self.ROS_rate
 		self.x += self.v * math.cos(self.theta) * self.ROS_period
 		self.y += self.v * math.sin(self.theta) * self.ROS_period
@@ -98,6 +89,7 @@ class Teensy_Sim:
 				vel = setpoint
 		return vel
 
+	
 
 rospy.init_node('Teensy_sim', anonymous=True)
 
@@ -106,7 +98,6 @@ simulator = Teensy_Sim()
 pub_millis = rospy.Publisher("teensy/Millis", UInt32, queue_size=10)
 pub_motors = rospy.Publisher("teensy/Motors", Motor, queue_size=10)
 pub_IMU = rospy.Publisher("teensy/IMU", IMU, queue_size=10)
-
 
 millis_to_ROS = UInt32()
 motor_msg = Motor()
@@ -138,12 +129,10 @@ while not rospy.is_shutdown():
 			    IMU_msg.accel_y = R * simulator.w * simulator.w			
 		pub_IMU.publish(IMU_msg)
 	if (ticks + 3) % 4 == 0:
-		motor_msg.left_pos = simulator.left_pos
-		motor_msg.left_vel = simulator.left_vel
-		motor_msg.right_pos = simulator.right_pos
-		motor_msg.right_vel = simulator.right_vel
 		motor_msg.front_pos = simulator.front_pos
 		motor_msg.front_vel = simulator.front_vel
+		motor_msg.rear_pos = simulator.rear_pos
+		motor_msg.rear_vel = simulator.rear_vel
 		pub_motors.publish(motor_msg)
 	if ticks == 7:
 		pub_millis.publish(millis_to_ROS)
