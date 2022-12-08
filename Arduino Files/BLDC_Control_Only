@@ -1,0 +1,64 @@
+#include <Servo.h>
+
+Servo myservo;
+
+
+//Variables to set the pins needed to read high or low from Raspberry Pi 4
+int drive1 = 3;
+int drive2 = 4;
+
+//Variables to set the manual conditions of our control Car
+int drive;
+int back;
+
+//Variables to change the value of our PWM signals applied to the motors
+int val_drive;
+
+
+
+void setup() {
+  pinMode(drive1, INPUT);
+  pinMode(drive2, INPUT);
+  
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  myservo.attach(9,1000,2000); //PWM Pin Connection
+  delay(1);
+  myservo.write(90); //DO NOT CHANGE! Require to activate ESC
+ 
+  delay(5000);       //Mandatory Wait Time
+  
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+    drive = digitalRead(drive1);
+    back = digitalRead(drive2);
+
+    //Serial.print(drive);
+    //Serial.print("\n");
+    //Serial.print(back);
+    //Serial.print("\n");
+    
+    
+    if(drive == 1){
+      val_drive = 80;
+      
+    }
+    else if(back == 1){
+      val_drive = 95;
+
+      }
+ 
+    else{
+      val_drive = 90;
+    }
+
+   
+      myservo.write(val_drive);          //Writes read int value to ESC
+      delay(1);
+      
+    
+    
+  
+}
