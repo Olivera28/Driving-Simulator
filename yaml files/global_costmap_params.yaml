@@ -1,0 +1,19 @@
+global_costmap:
+    global_frame: map
+    robot_base_frame: base_DK
+    update_frequency: 0.5 # data comes in
+    publish_frequency: 0.25 # costmap publishes info
+    rolling_window: false
+    track_unknown_space: false
+    recovery_behavior: false
+    width: 3.0
+    height: 4.0
+    plugins: 
+      - {name: static_layer, type: "costmap_2d::StaticLayer"}
+      - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+    static_layer:
+      map_topic: map
+      subscribe_to_updates: true
+    inflation_layer:
+      inflation_radius: 0.2
+      cost_scaling_factor: 1.0

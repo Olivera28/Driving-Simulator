@@ -1,3 +1,5 @@
+
+
 joint_state_controller: 
 
     # Publish all joint states ----------------------------------- 
@@ -13,24 +15,29 @@ joint_position_controllers:
 
     left_position_controller: 
       type: velocity_controllers/JointPositionController 
-      joint: l_motor_shaft 
-      pid: {p: 4, i: 0.5, d: -0.1} 
+      joint: l_wheel_motor_to_l_motor_shaft 
+      pid: {p: 0, i: 0, d: 0} 
 
        
 
     right_position_controller: 
       type: velocity_controllers/JointPositionController 
-      joint: r_motor_shaft
-      pid: {p: 4, i: 0.5, d: -0.1} 
+      joint: r_wheel_motor_to_r_motor_shaft 
+      pid: {p: 0, i: 0, d: 0} 
 
        
 
-    front_position_controller: 
+    shoulder_position_controller: 
       type: velocity_controllers/JointPositionController 
-      joint: stepper_stepper_shaft
-      pid: {p: 3, i: 0.5, d: -0.6} 
+      joint: arm_motor_to_elbow1 
+      pid: {p: 0, i: 0, d: 0} 
 
+       
 
+    elbow_position_controller: 
+      type: velocity_controllers/JointPositionController 
+      joint: elbow_motor_to_elbow2 
+      pid: {p: 0, i: 0, d: 0}
       
 
 
@@ -42,29 +49,33 @@ robot_trajectory_controller:
     trajectory_controller:
         type: velocity_controllers/JointTrajectoryController 
         joints:  
-            - l_motor_shaft
-            - r_motor_shaft 
-            - stepper_stepper_shaft 
+            - l_wheel_motor_to_l_motor_shaft
+            - r_wheel_motor_to_r_motor_shaft 
+            - arm_motor_to_elbow1  
+            - elbow_motor_to_elbow2
 
         constraints: 
             goal_time: 2.0 
             stopped_velocity_tolerance: 0.001 
-            l_motor_shaft:  
+            l_wheel_motor_to_l_motor_shaft:  
                 trajectory: 10.0 
                 goal: 10.0 
-            r_motor_shaft:  
+            r_wheel_motor_to_r_motor_shaft:  
                 trajectory: 10.0 
                 goal: 10.0 
-            stepper_stepper_shaft :  
+            arm_motor_to_elbow1 :  
+                trajectory: 10.0 
+                goal: 10.0 
+            elbow_motor_to_elbow2:  
                 trajectory: 10.0 
                 goal: 10.0 
             stop_trajectory_duration: 0.5 
 
         gains:  
-            l_motor_shaft: {p: 4, i: 0.5, d: -0.1} 
-            r_motor_shaft: {p: 4, i: 0.5, d: -0.1} 
-            stepper_stepper_shaft: {p: 10, i: 0, d: 0.6} 
-            
+            l_wheel_motor_to_l_motor_shaft: {p: 4, i: 0.5, d: -0.1} 
+            r_wheel_motor_to_r_motor_shaft: {p: 4, i: 0.5, d: -0.1} 
+            arm_motor_to_elbow1: {p: 10, i: 0, d: 0.6} 
+            elbow_motor_to_elbow2: {p: 10, i: 0, d: 0.6} 
       
       
       
@@ -77,8 +88,8 @@ diff_drive_controller:
 
     mobile_base_controller:
           type        : "diff_drive_controller/DiffDriveController"
-          left_wheel  : 'l_motor_shaft'
-          right_wheel : 'r_motor_shaft'
+          left_wheel  : 'l_wheel_motor_to_l_motor_shaft'
+          right_wheel : 'r_wheel_motor_to_r_motor_shaft'
           publish_rate: 50.0               # default: 50
           pose_covariance_diagonal : [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
           twist_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
@@ -90,15 +101,17 @@ diff_drive_controller:
           wheel_radius : 0.04
 
           # Wheel separation and radius multipliers
-          wheel_separation_multiplier: 1.0 # default: 1.0
-          wheel_radius_multiplier    : 1.0 # default: 1.0
+          wheel_separation_multiplier: 0.98497 # default: 1.0
+          left_wheel_radius_multiplier: 1.037557724
+          right_wheel_radius_multiplier: 1.05822587386
+          #wheel_radius_multiplier: 1.0 #0.96382 # default: 1.0
 
           # Velocity commands timeout [s], default 0.5
           cmd_vel_timeout: 0.25
 
           # Base frame_id
           base_frame_id: base_footprint #default: base_link
-
+          allow_multiple_cmd_vel_publishers: true
           # Velocity and acceleration limits
           # Whenever a min_* is unspecified, default to -max_*
           linear:
@@ -119,3 +132,65 @@ diff_drive_controller:
               max_acceleration       : 1.5  # rad/s^2
               has_jerk_limits        : true
               max_jerk               : 2.5  # rad/s^3
+      
+ 
+
+
+
+
+
+
+ackermann_steering_controller:
+    mobile_base_controller:
+      type        : "ackermann_steering_controller/AckermannSteeringController"
+      rear_wheel: 'rear_shaft'
+      front_steer: 'stepper_stepper_shaft'
+      publish_rate: 50.0               # default: 50
+      pose_covariance_diagonal : [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+      twist_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+
+      # Wheel separation between the rear and the front, and diameter of the rear. 
+      # These are both optional.
+      # ackermann_steering_controller will attempt to read either one or both from the
+      # URDF if not specified as a parameter.
+      wheel_separation_h : 1.0
+      wheel_radius : 0.3
+
+      # Wheel separation and radius multipliers for odometry calibration.
+      wheel_separation_h_multiplier: 1.0 # default: 1.0
+      wheel_radius_multiplier    : 1.0 # default: 1.0
+
+      # Steer position angle multipliers for fine tuning.
+      steer_pos_multiplier       : 1.0
+
+      # Velocity commands timeout [s], default 0.5
+      cmd_vel_timeout: 0.25
+
+      # Base frame_id
+      base_frame_id: base_DK #default: base_link
+
+      # Odom frame_id
+      odom_frame_id: odom
+
+      # Velocity and acceleration limits
+      # Whenever a min_* is unspecified, default to -max_*
+      linear:
+        x:
+          has_velocity_limits    : true
+          max_velocity           : 1.0  # m/s
+          min_velocity           : -0.5 # m/s
+          has_acceleration_limits: true
+          max_acceleration       : 0.8  # m/s^2
+          min_acceleration       : -0.4 # m/s^2
+          has_jerk_limits        : true
+          max_jerk               : 5.0 # m/s^3
+
+      angular:
+        z:
+          has_velocity_limits    : true
+          max_velocity           : 1.7  # rad/s
+          has_acceleration_limits: true
+          max_acceleration       : 1.5  # rad/s^2
+          has_jerk_limits        : true
+          max_jerk               : 2.5 # rad/s^3
+      
