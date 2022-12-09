@@ -5,8 +5,8 @@ Servo ESC;
 int Speed;
 
 void setup() {
-  //The pulses will be between 1 millsecond and 2 milliseconds in length
   Serial.begin(9600);
+  //The pulses will be between 1 millsecond and 2 milliseconds in length
   ESC.attach(9, 1000, 2000);
 }
 
@@ -16,6 +16,7 @@ void loop() {
   //Create conversion scale
   //Voltage/number/degree
   Speed = map(Speed, 0, 1023, 0, 180);
+  
   Serial.println(Speed);
   //Sends value as a PWM signal to the electronic speed controller
   ESC.write(Speed);
