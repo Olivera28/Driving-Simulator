@@ -4,11 +4,11 @@ import RPi.GPIO as GPIO
 from time import sleep
 
 
-drive_f = 21
-drive_b = 20
+drive_f = 21 #drive
+drive_b = 20 #reverse
 
-turn_r = 16
-turn_l = 26
+turn_r = 16 #turn right
+turn_l = 26 #turn left
 
 GPIO.setwarnings(False)	
 
@@ -22,35 +22,35 @@ GPIO.setup(turn_l,GPIO.OUT)
 while True:
     val = input("Enter command: ")
     
-    if val == "d":
+    if val == "d": #drive
         GPIO.output(drive_f,1)
         GPIO.output(drive_b,0)
         GPIO.output(turn_r,0)
         GPIO.output(turn_l,0)
         sleep(1)
 
-    elif val == "b":
+    elif val == "b": #reverse
         GPIO.output(drive_f,0)
         GPIO.output(drive_b,1)
         GPIO.output(turn_r,0)
         GPIO.output(turn_l,0)
         sleep(1)
         
-    elif val == "s":
+    elif val == "s": #stop
         GPIO.output(drive_f,0)
         GPIO.output(drive_b,0)
         GPIO.output(turn_r,0)
         GPIO.output(turn_l,0)
         sleep(1)
         
-    elif val == "r":
+    elif val == "r": #turn right
         GPIO.output(drive_f,0)
         GPIO.output(drive_b,0)
         GPIO.output(turn_r,1)
         GPIO.output(turn_l,0)
         sleep(1)
         
-    elif val == "l":
+    elif val == "l": #turn left
         GPIO.output(drive_f,0)
         GPIO.output(drive_b,0)
         GPIO.output(turn_r,0)
@@ -58,35 +58,35 @@ while True:
         sleep(1)
         
         
-    elif val == "dr":
+    elif val == "dr": #drive and turn right
         GPIO.output(drive_f,1)
         GPIO.output(drive_b,0)
         GPIO.output(turn_r,1)
         GPIO.output(turn_l,0)
         sleep(1)
             
-    elif val == "dl":
+    elif val == "dl": #drive and turn left
         GPIO.output(drive_f,1)
         GPIO.output(drive_b,0)
         GPIO.output(turn_r,0)
         GPIO.output(turn_l,1)
         sleep(1)
         
-    elif val == "br":
+    elif val == "br": #reverse and turn right
         GPIO.output(drive_f,0)
         GPIO.output(drive_b,1)
         GPIO.output(turn_r,1)
         GPIO.output(turn_l,0)
         sleep(1)
             
-    elif val == "bl":
+    elif val == "bl": #reverse and turn left
         GPIO.output(drive_f,0)
         GPIO.output(drive_b,1)
         GPIO.output(turn_r,0)
         GPIO.output(turn_l,1)
         sleep(1)     
     
-    else:
+    else:   #default stops
         GPIO.output(drive_f,0)
         GPIO.output(drive_b,0)
         GPIO.output(turn_r,0)
@@ -94,9 +94,5 @@ while True:
         sleep(1)
     
     
-    #time.sleep(.25)
-    #GPIO.output(pin,False)
-    #time.sleep(.25)
-        
     
 GPIO.cleanup()
