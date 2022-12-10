@@ -3,7 +3,6 @@
  * Syracuse University Robotics Programming Course 
 
  */ 
-
  
 
 #include <ros.h> 
