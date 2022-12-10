@@ -94,5 +94,4 @@ while True:
         sleep(1)
     
     
-    
 GPIO.cleanup()
