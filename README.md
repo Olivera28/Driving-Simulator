@@ -1,4 +1,4 @@
-# DK
+# DK Team
 Senior Design Project
 
 This project will focus on creating a steering wheel box to control a
