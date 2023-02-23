@@ -1,7 +1,7 @@
 #include <WiFiNINA.h>
 
-#define SECRET_SSID "iot_lab" // your network SSID (name)
-#define SECRET_PASS "44FEC4DDB9" // your network password (use for WPA, or use as key for WEP)
+#define SECRET_SSID "" // your network SSID (name)
+#define SECRET_PASS "" // your network password (use for WPA, or use as key for WEP)
 
 int status = WL_IDLE_STATUS;     // the Wifi radio's status
 IPAddress server(10,144,113,159);  // Google
