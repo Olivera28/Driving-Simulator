@@ -6,8 +6,8 @@
 int status = WL_IDLE_STATUS;
 //#include "arduino_secrets.h"
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-char ssid[] = "iot_lab";        // your network SSID (name)
-char pass[] = "44FEC4DDB9";    // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "";        // your network SSID (name)
+char pass[] = "";    // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;            // your network key Index number (needed only for WEP)
 
 unsigned int localPort = 2390;      // local port to listen on
