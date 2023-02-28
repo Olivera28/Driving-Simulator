@@ -1,0 +1,29 @@
+int count = 0;
+int angle = 0;
+bool flag;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  angle = map(analogRead(A0), 0, 1023, 0, 360);
+  Serial.println(angle);
+  if (angle >= 0 && angle <= 200){
+    if (flag == true) {
+      flag = false;
+      count++;
+    }
+    Serial.print("count: ");
+    Serial.println(count);
+
+  }
+  else {
+    flag = true ;
+    Serial.print("count: ");
+    Serial.println(count);
+  }
+  delay(100);
+}
