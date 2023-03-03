@@ -4,9 +4,6 @@
    MKR WIFI 1010 board over a WiFi connection
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <SPI.h>          // needed for Arduino versions later than 0018
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>  
