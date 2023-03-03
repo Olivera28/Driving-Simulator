@@ -1,31 +1,45 @@
+/* UDP CLIENT CODE - MKR WIFI 1010
+   Team DK
+   Client code for MKR WIFI 101 Arduino board. Sends gear, velocity, and turn angle data in a UDP packet to a remote 
+   MKR WIFI 1010 board over a WiFi connection
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <SPI.h>          // needed for Arduino versions later than 0018
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>  
 
+// Set WiFi credentials
+#define WIFI_SSID "SSID"
+#define WIFI_PASS "PASSWORD"
 
+#define UDP_PORT 2390
 int status = WL_IDLE_STATUS;
-//#include "arduino_secrets.h"
-///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-char ssid[] = "";        // your network SSID (name)
-char pass[] = "";    // your network password (use for WPA, or use as key for WEP)
-int keyIndex = 0;            // your network key Index number (needed only for WEP)
 
-unsigned int localPort = 2390;      // local port to listen on
+IPAddress remoteIP(10,144,113,252);
 
-char packetBuffer[256]; //buffer to hold incoming packet
-char  ReplyBuffer[] = "acknowledged";       // a string to send back
-
+// UDP
 WiFiUDP Udp;
 
-//int position1 = 0;;
+// Packet struct for sending gear, velocity (vel), and angle of turn (turn)
+struct UdpPacket{
+  char gear = 'p';
+  double vel = 0.0;
+  int turn = 0;
+}packet; // Creates a single instance of the struct called packet
+
+// Creates packetBuffer to send with UDP Packet containing the struct
+char packetBuffer[sizeof(packet)];
 
 void setup() {
- //Initialize serial and wait for port to open:
+  //Initialize serial and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
-  // check for the WiFi module:
+  //check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
     Serial.println("Communication with WiFi module failed!");
     // don't continue
@@ -38,42 +52,45 @@ void setup() {
   // attempt to connect to Wifi network:
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
+    Serial.println(WIFI_SSID);
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-    status = WiFi.begin(ssid, pass);
+    status = WiFi.begin(WIFI_SSID, WIFI_PASS);
     // wait 10 seconds for connection:
     delay(10000);
   }
 
   Serial.println("Connected to wifi");
-  printWifiStatus();
+  //printWifiStatus();
   Serial.println("\nStarting connection to server...");
   // if you get a connection, report back via serial:
-  Udp.begin(localPort);
+  Udp.begin(UDP_PORT);
+  
 }
+
 
 void loop() {
-    IPAddress remoteIP(10,144,113,231);
-    Serial.print(remoteIP);
-    Serial.print(", port ");
-    Serial.println(localPort);
-//    Udp.beginPacket(remoteIP, localPort);
-//    Udp.write(packetBuffer);
-//    Udp.println(packetBuffer);
-//    Udp.endPacket();
+    Serial.println("Data to be sent");
+    int j = 0;
+    for(int i =40; i<106; i+=2){
     
-    for(int i =40; i<106; i++){
-      Udp.beginPacket(remoteIP, localPort);
-      Udp.println(i);
+      //setting up dummy values for the packet
+      packet.vel = i + 0.3;
+      packet.turn = i+1;
+      
+      //printPacketInfo(); //Debugging
+
+      // Copys gear, velocity, and turn angle from struct into the packetBuffer
+      memcpy(packetBuffer, &packet.gear, sizeof(packet.gear));
+      memcpy(packetBuffer+sizeof(packet.gear), &packet.vel, sizeof(packet.vel));
+      memcpy(packetBuffer+sizeof(packet.gear)+sizeof(packet.vel), &packet.turn, sizeof(packet.turn));
+      
+      //Opens a packet, writes to the buffer, and sends the packet
+      Udp.beginPacket(remoteIP, UDP_PORT);
       Udp.write(packetBuffer);
       Udp.endPacket();
-      delay(100);
-    }
-    
-}
-
-
-
+     
+    }   
+ }
 
 void printWifiStatus() {
   // print the SSID of the network you're attached to:
@@ -90,4 +107,17 @@ void printWifiStatus() {
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
+}
+
+// Prints the packets values as well as the encoded values
+
+void printPacketInfo(){
+  Serial.print("gear= ");
+  Serial.println(packet.gear);
+  Serial.print("vel= ");
+  Serial.println(packet.vel);
+  Serial.print("turn= ");
+  Serial.println(packet.turn);
+  Serial.println(packetBuffer);
+  Serial.println(sizeof(packetBuffer));
 }
