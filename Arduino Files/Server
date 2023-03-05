@@ -19,13 +19,6 @@ unsigned int localPort = 2390;      // local port to listen on
 char packetBuffer[30]; //buffer to hold incoming packet
 char  ReplyBuffer[] = "acknowledged";       // a string to send back
 
-//  Gas Pedal Variables
-const float MAX_SPEED = 132.0;
-const float MIN_ACCELERATION = 0.00005;
-
-float velocity = 0.0;
-float acceleration = 0;
-
 //UDP
 WiFiUDP Udp;
 
@@ -40,9 +33,6 @@ void setup() {
 
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
-  
-  // Gas Pedal Potentiometer
-  pinMode (A1, INPUT);
 
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
@@ -83,37 +73,6 @@ void setup() {
 }
 
 void loop() {
-  // Reads Pedal Values
-  acceleration = analogRead(A1);
-
-  // Maps potentiometer to acceleration values
-  acceleration = map(acceleration, 0, 666, 0, 617);
-  acceleration = acceleration / 1000;
-
-  Serial.print("Acceleration:");
-  Serial.print(acceleration,10);
-
-  // Accelerates car past a specefic threshold up to a max speed
-  if (acceleration > MIN_ACCELERATION && velocity <= MAX_SPEED){
-    velocity += acceleration;
-  }
-
-  // stops car at low enough velocity
-  if (velocity < .175){
-    velocity = 0.0;
-  }
-
-  // Decelerates if not accelerating
-  if (acceleration < MIN_ACCELERATION && velocity > .175){
-    velocity -= .175;
-  }
-
-  Serial.print(",");
-  Serial.print("Velocity:");
-  Serial.println(velocity);
-
-  delay(10);
-
 
   // if there's data available, read a packet
   int packetSize = Udp.parsePacket();
