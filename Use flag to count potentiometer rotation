@@ -11,6 +11,8 @@ void loop() {
   // put your main code here, to run repeatedly:
   angle = map(analogRead(A0), 0, 1023, 0, 360);
   Serial.println(angle);
+  //if the angle is between 0 and 200 degree the count go up by one
+  //it will count up only if the rotation pass 200 degree once
   if (angle >= 0 && angle <= 200){
     if (flag == true) {
       flag = false;
