@@ -5,21 +5,28 @@
 */
 
 //Declaration of variables for the steering wheel data
-#define outputA 4
-#define outputB 5
+#define pwmA 0 
+ #define STBY 8 
+ #define AIN1 6 
+ #define AIN2 7  
+ #define outputA 4
+ #define outputB 5
 
  int counter = 0; 
  int aState;
  int aLastState; 
  int turn_lr = 0;
+ int turn = 0;
+ int motorResist = 0;
+ float currentGear = 'p';
 //----------------------------------------------------------------------
 #include <SPI.h>          // needed for Arduino versions later than 0018
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>  
 
 // Set WiFi credentials
-#define WIFI_SSID ""
-#define WIFI_PASS ""
+#define WIFI_SSID "iot_lab"
+#define WIFI_PASS "44FEC4DDB9"
 
 #define UDP_PORT 2390
 int status = WL_IDLE_STATUS;
@@ -31,7 +38,7 @@ const float MIN_ACCELERATION = 0.00005;
 double velocity = 0.0;
 double acceleration = 0.0;
 
-IPAddress remoteIP(10,144,113,113);
+IPAddress remoteIP(10,144,113,180);
 
 // UDP
 WiFiUDP Udp;
@@ -49,10 +56,25 @@ char packetBuffer[sizeof(packet)];
 void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
-  pinMode (outputA,INPUT);
-  pinMode (outputB,INPUT);
+
+  //Digital pins for the push buttons
+  pinMode(1,INPUT_PULLDOWN);
+  pinMode(2,INPUT_PULLDOWN);
+  pinMode(3,INPUT_PULLDOWN);
+
+  //Digital pins for the rotary encoder
+   pinMode (outputA,INPUT);
+   pinMode (outputB,INPUT);
+
+  //Digital pins for the DC motor control
+   pinMode (pwmA,OUTPUT); 
+   pinMode (STBY,OUTPUT); 
+   pinMode (AIN1,OUTPUT); 
+   pinMode (AIN2,OUTPUT);
+
   // Gas Pedal Potentiometer
   pinMode (A1, INPUT);
+  aLastState = digitalRead(outputA); 
 
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
@@ -92,12 +114,67 @@ void setup() {
 void loop() {
   aState = digitalRead(outputA); // Reads the "current" state of the outputA
    
+   //For Clock wise motion , inputA1 = Low , inputA2 = High 
+   digitalWrite(STBY, HIGH); 
+   Serial.write(currentGear);
+   Serial.println();
+   returnGear();
+   aState = digitalRead(outputA); // Reads the "current" state of the outputA
+   // If the previous and the current state of the outputA are different, that means a Pulse has occured
+   if (aState != aLastState){     
+     // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
+     if (digitalRead(outputB) != aState) { 
+       counter ++;
+     } else {
+      counter --;
+     }
+
+     // Wrap around when wheel has tunred passed three times to the right
+     if(counter == 238) counter = 0;
+
+     // Wrap around when wheel has tunred passed three times to the left
+     if(counter == -238) counter = 0;
+
+     //Serial.print("Position: ");
+     //Serial.println(counter);
+
+    // User is turning the steering wheel to the right
+    if(counter > 0){
+      turn = map(counter, 0, 238, 105, 40);
+      motorResist = map(counter,0,238,0,237);
+      digitalWrite(AIN1,HIGH) ; 
+      digitalWrite(AIN2,LOW) ; 
+       analogWrite(pwmA,motorResist*3); 
+      delay(1); 
+      //analogWrite(pwmA,0);
+      Serial.print("Turning: ");
+      Serial.println(motorResist);
+      //Serial.println(turn);
+    }
+    if(counter < 0){
+      turn = map(counter, -238, 0, 190, 105);
+      motorResist = map(counter, 0,-238,0,237);
+      digitalWrite(AIN1,LOW) ; 
+      digitalWrite(AIN2,HIGH) ; 
+      analogWrite(pwmA,motorResist*3); 
+      delay(1); 
+      //analogWrite(pwmA,0); 
+      Serial.print("Turning: ");
+      Serial.println(motorResist);
+      //Serial.println(turn);
+    }
+    
+  
+   } 
+   aLastState = aState;
+
    //Serial.println("Data to be sent");
     // Reads Pedal Values
    //Serial.print(",");
    //Serial.print("Velocity:");
    packet.vel = 0.0;
    packet.turn = 0;
+   packet.gear = 'p';
 
    acceleration = analogRead(A1);
   Serial.println(acceleration);
@@ -135,6 +212,8 @@ void loop() {
    else{
      packet.vel = velocity;
    }
+   packet.gear = currentGear;
+   packet.turn = turn;
 
   
    
@@ -181,6 +260,18 @@ void printPacketInfo(){
   Serial.println(sizeof(packetBuffer));
 }
 
+void returnGear(){
+  if (digitalRead(1) == 1){
+     currentGear = 'p';
+   }
+   if (digitalRead(2) == 1){
+     currentGear = 'd';
+   }
+   if (digitalRead(3) == 1){
+     currentGear = 'r';
+   }
+
+ }
 
 
 void returnTurn(){
