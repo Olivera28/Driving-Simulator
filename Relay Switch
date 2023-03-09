@@ -12,6 +12,7 @@ void loop() {
   // put your main code here, to run repeatedly:f
   val = analogRead(PMETER_PIN);
   Serial.println(val);
+  // Relay on and off for certain amount of time
   digitalWrite(RELAY_PIN, HIGH);
   delay(2000);
   digitalWrite(RELAY_PIN, LOW);
