@@ -7,17 +7,22 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
+#define pwmVideo 6 
+
+#include <Servo.h> 
+
+Servo velServo; 
+Servo turnServo;
 
 int status = WL_IDLE_STATUS;
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-char ssid[] = "";        // your network SSID (name)
-char pass[] = "";    // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "iot_lab";        // your network SSID (name)
+char pass[] = "44FEC4DDB9";    // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;            // your network key Index number (needed only for WEP)
 
 unsigned int localPort = 2390;      // local port to listen on
 
-char packetBuffer[256]; //buffer to hold incoming packet
-char  ReplyBuffer[] = "acknowledged";       // a string to send back
+
 
 //UDP
 WiFiUDP Udp;
@@ -28,6 +33,9 @@ struct UdpPacket{
   double vel = 0.0;
   int turn = 0;
 }packet;
+
+char packetBuffer[255]; //buffer to hold incoming packet
+char  ReplyBuffer[] = "acknowledged";       // a string to send back
 
 void setup() {
 
@@ -70,6 +78,17 @@ void setup() {
 
   // if you get a connection, report back via serial:
   Udp.begin(localPort);
+
+  pinMode(pwmVideo,OUTPUT);
+  turnServo.attach(7,1000,2000);
+  delay(1);
+  velServo.attach(0,1000,2000); //PWM Pin Connection //20ms  
+  delay(1);
+  turnServo.write(105);
+  velServo.write(90); //DO NOT CHANGE! Require to activate ESC
+  delay(5000);       //Mandatory Wait Time 
+
+
 }
 
 void loop() {
@@ -86,9 +105,9 @@ void loop() {
     // Retrives received packet ip for acknowledge packet
     IPAddress remoteIp = Udp.remoteIP();
 
-    //Serial.print(remoteIp);
-    //Serial.print(", port ");
-    //Serial.println(Udp.remotePort());
+    Serial.print(remoteIp);
+    Serial.print(", port ");
+    Serial.println(Udp.remotePort());
 
     // read the packet into packetBufffer
     int len = Udp.read(packetBuffer, 256);
@@ -102,6 +121,7 @@ void loop() {
     memcpy(&packet.vel, packetBuffer+sizeof(packet.gear), sizeof(packet.vel));
     memcpy(&packet.turn, packetBuffer+sizeof(packet.gear)+sizeof(packet.vel), sizeof(packet.turn));
 
+    controlRC();
     // Prints received values
     Serial.print("Gear:");    
     Serial.print(packet.gear);
@@ -113,11 +133,35 @@ void loop() {
     Serial.println(packet.turn);
 
     // Send a reply, to the IP address and port that sent us the packet we received
-    Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-    Udp.write(ReplyBuffer);
-    Udp.endPacket();
+    // Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+    // Udp.write(ReplyBuffer);
+    // Udp.endPacket();
   }
 }
+
+
+void controlRC(){
+  if(packet.gear == 'p'){
+    turnServo.write(packet.turn);
+    velServo.write(90);      
+  }
+
+  if(packet.gear == 'd'){
+    analogWrite(pwmVideo,100);
+    turnServo.write(packet.turn);
+    velServo.write(packet.vel);
+  }
+  if(packet.gear == 'r'){
+    analogWrite(pwmVideo,200);
+    turnServo.write(packet.turn);
+    velServo.write(packet.vel);
+  }
+
+}
+
+
+
+
 
 void printWifiStatus() {
 
