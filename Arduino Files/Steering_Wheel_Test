@@ -1,0 +1,397 @@
+/* UDP CLIENT CODE - MKR WIFI 1010
+   Team DK
+   Client code for MKR WIFI 101 Arduino board. Sends gear, velocity, and turn angle data in a UDP packet to a remote 
+   MKR WIFI 1010 board over a WiFi connection
+*/
+
+//Declaration of variables for the steering wheel data
+
+//DC motor pins
+#define pwmA 0 
+#define STBY 8 
+#define AIN1 6 
+#define AIN2 7 
+
+//Rotary encoder pins 
+#define ENC_A 1 //10
+#define ENC_B 2 //11
+
+// //----------------------------------------------------------------------
+// #include <SPI.h>          // needed for Arduino versions later than 0018
+// #include <WiFiNINA.h>
+// #include <WiFiUdp.h>  
+
+// // Set WiFi credentials
+// #define WIFI_SSID "iot_lab"
+// #define WIFI_PASS "44FEC4DDB9"
+
+// #define UDP_PORT 2390
+// int status = WL_IDLE_STATUS;
+
+//  Gas Pedal Variables
+const float MAX_SPEED = 640.0;
+const float MIN_ACCELERATION = 0.00005;
+
+//variables for the rotary encoder function
+int counter = 158; 
+int aState;
+int aLastState;
+
+//variables for steering wheel FFB
+int turn_lr = 0;
+int motorResist = 0;
+
+char currentGear = 'p';
+
+//global variable to store the value of the acceleration pedal
+double acceleration = 0.0;
+double velocity = 0.0;
+
+
+// UDP
+// WiFiUDP Udp;
+// IPAddress remoteIP(10,144,113,180);
+
+// Packet struct for sending gear, velocity (vel), and angle of turn (turn)
+struct UdpPacket{
+  char gear = 'p';
+  double vel = 0.0;
+  int turn = 0;
+}packet; // Creates a single instance of the struct called packet
+
+// Creates packetBuffer to send with UDP Packet containing the struct
+char packetBuffer[sizeof(packet)];
+
+
+
+void setup() {
+  //Initialize serial and wait for port to open:
+  Serial.begin(9600);
+
+  //Digital pins for the push buttons
+  pinMode(1,INPUT_PULLDOWN);
+  pinMode(2,INPUT_PULLDOWN);
+  pinMode(3,INPUT_PULLDOWN);
+
+  //Digital pins for the rotary encoder
+  pinMode(ENC_A,INPUT);
+  pinMode(ENC_B,INPUT);
+
+  //Digital pins for the DC motor control
+  pinMode(pwmA,OUTPUT); 
+  pinMode(STBY,OUTPUT); 
+  pinMode(AIN1,OUTPUT); 
+  pinMode(AIN2,OUTPUT);
+
+  // Gas Pedal Potentiometer
+  pinMode (A1, INPUT);
+
+  //attachInterrupt(digitalPinToInterrupt(ENCA),readTurn,RISING);
+  
+
+  // while (!Serial) {
+  //   ; // wait for serial port to connect. Needed for native USB port only
+  // }
+  // //check for the WiFi module:
+  // if (WiFi.status() == WL_NO_MODULE) {
+  //   Serial.println("Communication with WiFi module failed!");
+  //   // don't continue
+  //   while (true);
+  // }
+  // String fv = WiFi.firmwareVersion();
+  // if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
+  //   Serial.println("Please upgrade the firmware");
+  // }
+  // // attempt to connect to Wifi network:
+  // while (status != WL_CONNECTED) {
+  //   Serial.print("Attempting to connect to SSID: ");
+  //   Serial.println(WIFI_SSID);
+  //   // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+  //   status = WiFi.begin(WIFI_SSID, WIFI_PASS);  
+  //   // wait 10 seconds for connection:
+  //   delay(10000);
+  // }
+
+  // Serial.println("Connected to wifi");
+  // Serial.println("\nStarting connection to server...");
+  
+  // // if you get a connection, report back via serial:
+  // Udp.begin(UDP_PORT);
+
+  // Reads the initial state of the outputA
+   aLastState = digitalRead(ENC_A);
+  
+}
+
+
+void loop() {
+
+  acceleration = analogRead(A1);
+  //Serial.println(acceleration);
+
+  
+  //building the packet with respect to real data
+  setGear();
+  setVelocity();
+
+  packet.gear = currentGear;
+  packet.vel = velocity;
+  //noInterrupts(); // disable interrupts temporarily while reading
+  
+  aState = digitalRead(ENC_A); // Reads the "current" state of the outputA
+  if (aState != aLastState){
+
+     // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
+    if (digitalRead(ENC_B) != aState) { 
+      counter ++;
+    } else {
+      counter --;
+    }
+     
+    // User is turning the steering wheel to the right
+    Serial.print("Position: ");
+    Serial.println(counter);
+
+    if(counter > 158){ //Clockwise condition
+      turn_lr = map(counter, 158, 316, 105, 40);
+      Serial.print("Turning: ");
+      Serial.println(turn_lr);
+      rotateCCW();
+
+    }
+    if(counter < 158){ //CounterClockwise condition
+      turn_lr = map(counter, 0, 158, 190, 105);
+      Serial.print("Turning: ");
+      Serial.println(turn_lr);
+      rotateCW();
+    }
+    
+    // Wrap around when wheel has tunred passed three times to the right
+    if(counter >= 316) counter = 316;
+    // Wrap around when wheel has tunred passed three times to the left
+    if(counter <= 0) counter = 0;
+    
+  }
+  packet.turn = turn_lr; 
+  //interrupts(); // turn interrupts back on
+  // Serial.print("Packet_turn: ");
+  // Serial.println(packet.turn);
+  //printPacketInfo();
+  // Copys gear, velocity, and turn angle from struct into the packetBuffer
+  memcpy(packetBuffer, &packet.gear, sizeof(packet.gear));
+  memcpy(packetBuffer+sizeof(packet.gear), &packet.vel, sizeof(packet.vel));
+  memcpy(packetBuffer+sizeof(packet.gear)+sizeof(packet.vel), &packet.turn, sizeof(packet.turn));
+         
+  //Opens a packet, writes to the buffer, and sends the packet
+  // Udp.beginPacket(remoteIP, UDP_PORT);
+  // Udp.write(packetBuffer, sizeof(packetBuffer));
+  // Udp.endPacket();
+
+  aLastState = aState; // Updates the previous state of the outputA with the current state
+}
+
+
+//Function to chage the gear with respect to three push buttons
+void setGear(){
+  if (digitalRead(1) == 1){
+     currentGear = 'p';
+   }
+   if (digitalRead(2) == 1){
+     currentGear = 'd';
+   }
+   if (digitalRead(3) == 1){
+     currentGear = 'r';
+   }
+}
+
+
+//function to set the velocity of our RC car
+void setVelocity(){
+  // Maps potentiometer to acceleration values
+  acceleration = map(acceleration, 0, 1023, 0, 640);
+  acceleration = acceleration / 1000;
+
+  // Accelerates car past a specefic threshold up to a max speed
+  if (acceleration > MIN_ACCELERATION && velocity <= MAX_SPEED){
+    velocity += acceleration;
+  }
+
+   // stops car at low enough velocity
+  else if (velocity < .175){
+    velocity = 0.0;
+  }
+
+   // Decelerates if not accelerating
+  else if (acceleration < MIN_ACCELERATION & velocity > .175){
+    velocity -= .175;
+  }
+  
+}
+
+
+void rotateCW() {
+  //motorResist = map(counter, 0,-237,0,237);
+  digitalWrite(STBY,HIGH); 
+  digitalWrite(AIN1,LOW); 
+  digitalWrite(AIN2,HIGH);
+  //Serial.println(motorResist); 
+  analogWrite(pwmA,255); 
+  delay(5);
+  analogWrite(pwmA,0); 
+}
+
+void rotateCCW() {
+  //motorResist = map(counter,0,238,0,-237);
+  digitalWrite(STBY,HIGH);
+  digitalWrite(AIN1,HIGH); 
+  digitalWrite(AIN2,LOW);
+  
+  analogWrite(pwmA,255); 
+  delay(5);
+  analogWrite(pwmA,0); 
+}
+
+
+//Function to read the angular rotation of the steering wheel using a rotary encoder
+// int readTurn(){
+//   int turn_lr = 0;
+
+//   if (aState != aLastState){
+
+//      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
+//     if (digitalRead(ENCB) != aState) { 
+//       counter ++;
+//     } else {
+//       counter --;
+//     }
+     
+//     // Wrap around when wheel has tunred passed three times to the right
+//     if(counter == 238) counter = 0;
+//     // Wrap around when wheel has tunred passed three times to the left
+//     if(counter == -238) counter = 0;
+ 
+//     // User is turning the steering wheel to the right
+//     Serial.print("Position: ");
+//     Serial.println(counter);
+
+//     if(counter > 0){ //Clockwise condition
+//       turn_lr = map(counter, 0, 238, 105, 40);
+//       Serial.print("Turning: ");
+//       Serial.println(turn_lr);
+
+//       motorResist = map(counter,0,238,0,-237);
+//       digitalWrite(AIN1,HIGH) ; 
+//       digitalWrite(AIN2,LOW) ;
+//       Serial.println(motorResist);
+//       analogWrite(pwmA,motorResist*3); 
+//       delay(1); 
+//       //analogWrite(pwmA,0);
+
+//     }
+//     if(counter < 0){ //CounterClockwise condition
+//       turn_lr = map(counter, -238, 0, 190, 105);
+//       Serial.print("Turning: ");
+//       Serial.println(turn_lr);
+
+//       motorResist = map(counter, 0,-237,0,237);
+//       digitalWrite(AIN1,LOW) ; 
+//       digitalWrite(AIN2,HIGH);
+//       Serial.println(motorResist); 
+//       analogWrite(pwmA,motorResist*3); 
+//       delay(1);
+//       //analogWrite(pwmA,0); 
+//     }
+      
+//   }
+
+//   return turn_lr;
+
+
+
+//   /*
+//   aState = digitalRead(outputA); // Reads the "current" state of the outputA
+//   // If the previous and the current state of the outputA are different, that means a Pulse has occured
+//   if (aState != aLastState){     
+//   // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
+//   if (digitalRead(outputB) != aState) {
+//     counter ++;
+//   } 
+//   else {
+//     counter --;
+//   }
+
+//   // Wrap around when wheel has tunred passed three times to the right
+//   if(counter == 238) counter = 0;
+
+//   // Wrap around when wheel has tunred passed three times to the left
+//   if(counter == -238) counter = 0;
+
+ 
+//   // User is turning the steering wheel to the right
+//   if(counter > 0){
+//     turn = map(counter, 0, 238, 105, 40);
+//     motorResist = map(counter,0,238,0,237);
+//     digitalWrite(AIN1,HIGH) ; 
+//     digitalWrite(AIN2,LOW) ; 
+//     analogWrite(pwmA,motorResist*3); 
+//     delay(1); 
+//     //analogWrite(pwmA,0);
+//     Serial.print("Turning: ");
+//     Serial.println(motorResist);
+//     //Serial.println(turn);
+//   }
+//   if(counter < 0){
+//     turn = map(counter, -238, 0, 190, 105);
+//     motorResist = map(counter, 0,-238,0,237);
+//     digitalWrite(AIN1,LOW) ; 
+//     digitalWrite(AIN2,HIGH) ; 
+//     analogWrite(pwmA,motorResist*3); 
+//     delay(1); 
+//     //analogWrite(pwmA,0); 
+//     Serial.print("Turning: ");
+//     Serial.println(motorResist);
+//     //Serial.println(turn);
+//   }
+    
+  
+//   } 
+//   */
+
+
+// }
+
+
+
+
+
+//Function to print the status of the Wifi connection
+// void printWifiStatus() {
+//   // print the SSID of the network you're attached to:
+//   Serial.print("SSID: ");
+//   Serial.println(WiFi.SSID());
+
+//   // print your board's IP address:
+//   IPAddress ip = WiFi.localIP();
+//   Serial.print("IP Address: ");
+//   Serial.println(ip);
+  
+//   // print the received signal strength:
+//   long rssi = WiFi.RSSI();
+//   Serial.print("signal strength (RSSI):");
+//   Serial.print(rssi);
+//   Serial.println(" dBm");
+// }
+
+
+// Prints the packets values as well as the encoded values
+void printPacketInfo(){
+  Serial.print("gear= ");
+  Serial.println(packet.gear);
+  Serial.print("vel= ");
+  Serial.println(packet.vel);
+  Serial.print("turn= ");
+  Serial.println(packet.turn);
+  //Serial.println(packetBuffer);
+  //Serial.println(sizeof(packetBuffer));
+  delay(100);
+}
