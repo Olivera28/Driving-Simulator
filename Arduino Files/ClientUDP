@@ -57,7 +57,6 @@ double velocity = 0.0;
 
 // UDP
  WiFiUDP Udp;
- IPAddress remoteIP(10,144,113,62);
 
 // Packet struct for sending gear, velocity (vel), and angle of turn (turn)
 struct UdpPacket{
@@ -135,7 +134,13 @@ void setup() {
 
 
 void loop() {
-
+  // Retrives received packet ip for acknowledge packet
+  IPAddress remoteIp = Udp.remoteIP();
+  Serial.print(remoteIp);
+  Serial.print(", port ");
+  Serial.println(Udp.remotePort());
+  
+  //reading data from pedal's potentiometers
   acceleration = analogRead(A1);
   brake = analogRead(A2);
 
@@ -426,4 +431,3 @@ void printPacketInfo(){
   //Serial.println(sizeof(packetBuffer));
   delay(100);
 }
-
