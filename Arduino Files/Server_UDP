@@ -1,6 +1,6 @@
-/* UDP Server CODE - MKR WIFI 1010
+/* UDP CLIENT CODE - MKR WIFI 1010
    Team DK
-   Server code for MKR WIFI 101 Arduino board. Sends gear, velocity, and turn angle data in a UDP packet to a remote 
+   Client code for MKR WIFI 101 Arduino board. Sends gear, velocity, and turn angle data in a UDP packet to a remote 
    MKR WIFI 1010 board over a WiFi connection
 */
 
@@ -16,21 +16,27 @@
 #define ENC_A 1 //10
 #define ENC_B 2 //11
 
+// Gas Pedal Pin
+#define GAS A1
+
+// Brake Pedal Pin
+#define BRAKE A2
 // //----------------------------------------------------------------------
-// #include <SPI.h>          // needed for Arduino versions later than 0018
-// #include <WiFiNINA.h>
-// #include <WiFiUdp.h>  
+#include <SPI.h>          // needed for Arduino versions later than 0018
+#include <WiFiNINA.h>
+#include <WiFiUdp.h>  
 
-// // Set WiFi credentials
-// #define WIFI_SSID "iot_lab"
-// #define WIFI_PASS "44FEC4DDB9"
+// Set WiFi credentials
+#define WIFI_SSID "iot_lab"
+#define WIFI_PASS "44FEC4DDB9"
 
-// #define UDP_PORT 2390
-// int status = WL_IDLE_STATUS;
+#define UDP_PORT 2390
+int status = WL_IDLE_STATUS;
 
 //  Gas Pedal Variables
-const float MAX_SPEED = 640.0;
-const float MIN_ACCELERATION = 0.00005;
+const float MAX_SPEED = 100.0;
+const float MIN_ACCELERATION = 0.5;
+
 
 //variables for the rotary encoder function
 int counter = 158; 
@@ -45,12 +51,12 @@ char currentGear = 'p';
 
 //global variable to store the value of the acceleration pedal
 double acceleration = 0.0;
+double brake = 0.0;
 double velocity = 0.0;
 
 
 // UDP
-// WiFiUDP Udp;
-// IPAddress remoteIP(10,144,113,180);
+ WiFiUDP Udp;
 
 // Packet struct for sending gear, velocity (vel), and angle of turn (turn)
 struct UdpPacket{
@@ -69,9 +75,9 @@ void setup() {
   Serial.begin(9600);
 
   //Digital pins for the push buttons
+  pinMode(1,INPUT_PULLDOWN);
+  pinMode(2,INPUT_PULLDOWN);
   pinMode(3,INPUT_PULLDOWN);
-  pinMode(4,INPUT_PULLDOWN);
-  pinMode(5,INPUT_PULLDOWN);
 
   //Digital pins for the rotary encoder
   pinMode(ENC_A,INPUT);
@@ -84,39 +90,42 @@ void setup() {
   pinMode(AIN2,OUTPUT);
 
   // Gas Pedal Potentiometer
-  pinMode (A1, INPUT);
+  pinMode (GAS, INPUT);
+
+  // Break Pedal Potentiometer
+  pinMode (BRAKE, INPUT);
 
   //attachInterrupt(digitalPinToInterrupt(ENCA),readTurn,RISING);
   
 
-  // while (!Serial) {
-  //   ; // wait for serial port to connect. Needed for native USB port only
-  // }
-  // //check for the WiFi module:
-  // if (WiFi.status() == WL_NO_MODULE) {
-  //   Serial.println("Communication with WiFi module failed!");
-  //   // don't continue
-  //   while (true);
-  // }
-  // String fv = WiFi.firmwareVersion();
-  // if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
-  //   Serial.println("Please upgrade the firmware");
-  // }
-  // // attempt to connect to Wifi network:
-  // while (status != WL_CONNECTED) {
-  //   Serial.print("Attempting to connect to SSID: ");
-  //   Serial.println(WIFI_SSID);
-  //   // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-  //   status = WiFi.begin(WIFI_SSID, WIFI_PASS);  
-  //   // wait 10 seconds for connection:
-  //   delay(10000);
-  // }
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
+  //check for the WiFi module:
+  if (WiFi.status() == WL_NO_MODULE) {
+    Serial.println("Communication with WiFi module failed!");
+    // don't continue
+    while (true);
+  }
+  String fv = WiFi.firmwareVersion();
+  if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
+    Serial.println("Please upgrade the firmware");
+  }
+  // attempt to connect to Wifi network:
+  while (status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(WIFI_SSID);
+    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    status = WiFi.begin(WIFI_SSID, WIFI_PASS);  
+    // wait 10 seconds for connection:
+    delay(10000);
+  }
 
-  // Serial.println("Connected to wifi");
-  // Serial.println("\nStarting connection to server...");
+  Serial.println("Connected to wifi");
+  Serial.println("\nStarting connection to server...");
   
-  // // if you get a connection, report back via serial:
-  // Udp.begin(UDP_PORT);
+  // if you get a connection, report back via serial:
+  Udp.begin(UDP_PORT);
 
   // Reads the initial state of the outputA
    aLastState = digitalRead(ENC_A);
@@ -125,17 +134,23 @@ void setup() {
 
 
 void loop() {
-
-  acceleration = analogRead(A1);
-  //Serial.println(acceleration);
-
+  // Retrives received packet ip for acknowledge packet
+  IPAddress remoteIp = Udp.remoteIP();
+  Serial.print(remoteIp);
+  Serial.print(", port ");
+  Serial.println(Udp.remotePort());
   
+  //reading data from pedal's potentiometers
+  acceleration = analogRead(A1);
+  brake = analogRead(A2);
+
   //building the packet with respect to real data
   setGear();
   setVelocity();
 
   packet.gear = currentGear;
-  packet.vel = velocity;
+  packet.vel = (map(velocity, 0.0, 100.0, 820.0, 600.0)/10.0);
+  //Serial.println(packet.vel);
   //noInterrupts(); // disable interrupts temporarily while reading
   
   aState = digitalRead(ENC_A); // Reads the "current" state of the outputA
@@ -148,24 +163,27 @@ void loop() {
       counter --;
     }
      
-    // User is turning the steering wheel to the right
+    / User is turning the steering wheel to the right
     Serial.print("Position: ");
     Serial.println(counter);
+
     if(counter > 316){counter = 316;}
     if(counter < 0){counter = 0 ;}
+    
     if(counter > 162){ //Clockwise condition
-      //turn_lr = map(counter, 162, 316, 105, 40);
+      turn_lr = map(counter, 162, 316, 105, 40);
       //Serial.print("Turning: ");
       //Serial.println(turn_lr);
       rotateCCW();
 
     }
     if(counter < 154){ //CounterClockwise condition
-      //turn_lr = map(counter, 0, 154, 190, 105);
+      turn_lr = map(counter, 0, 154, 190, 105);
       //Serial.print("Turning: ");
       //Serial.println(turn_lr);
       rotateCW();
     }
+    
   }
   packet.turn = turn_lr; 
   //interrupts(); // turn interrupts back on
@@ -178,9 +196,9 @@ void loop() {
   memcpy(packetBuffer+sizeof(packet.gear)+sizeof(packet.vel), &packet.turn, sizeof(packet.turn));
          
   //Opens a packet, writes to the buffer, and sends the packet
-  // Udp.beginPacket(remoteIP, UDP_PORT);
-  // Udp.write(packetBuffer, sizeof(packetBuffer));
-  // Udp.endPacket();
+  Udp.beginPacket(remoteIP, UDP_PORT);
+  Udp.write(packetBuffer, sizeof(packetBuffer));
+  Udp.endPacket();
 
   aLastState = aState; // Updates the previous state of the outputA with the current state
 }
@@ -204,24 +222,35 @@ void setGear(){
 //function to set the velocity of our RC car
 void setVelocity(){
   // Maps potentiometer to acceleration values
-  acceleration = map(acceleration, 0, 1023, 0, 640);
+  //acceleration = map(acceleration, 0, 1023, 60, 82);
   acceleration = acceleration / 1000;
+  brake = map(brake, 0, 1023, 0, 640);
+  brake = brake / 10000;
+  //Serial.println(brake);
 
   // Accelerates car past a specefic threshold up to a max speed
   if (acceleration > MIN_ACCELERATION && velocity <= MAX_SPEED){
-    velocity += acceleration;
+    velocity += acceleration*.1 - brake;
   }
 
    // stops car at low enough velocity
-  else if (velocity < .175){
+  if (velocity < .03){
     velocity = 0.0;
   }
 
    // Decelerates if not accelerating
-  else if (acceleration < MIN_ACCELERATION & velocity > .175){
-    velocity -= .175;
+  if (acceleration < MIN_ACCELERATION & velocity > .02){
+    velocity -= .05 - brake;
   }
-  
+  //velocity = map(velocity, 0.0, 100.0, 82.0, 60.0);
+  if (packet.gear == 'r'){
+    packet.vel = (map(velocity, 0.0, 100.0, 1018.0, 1300.0)/10.0);
+  }
+  else{
+    packet.vel = (map(velocity, 0.0, 100.0, 820.0, 600.0)/10.0);
+  }
+
+  Serial.println(velocity);
 }
 
 
@@ -233,7 +262,6 @@ void rotateCW() {
   Serial.print("CCW: ");
   Serial.println(motorResist); 
   analogWrite(pwmA,motorResist); 
-
 }
 
 void rotateCCW() {
@@ -243,11 +271,13 @@ void rotateCCW() {
   digitalWrite(AIN2,LOW);
   Serial.print("CW: ");
   Serial.println(motorResist); 
-  analogWrite(pwmA,motorResist); 
+  analogWrite(pwmA,motorResist);
 }
 
-void hardStop() {
-
+void stopMotor(){
+  digitalWrite(STBY,HIGH);
+  digitalWrite(AIN1,LOW); 
+  digitalWrite(AIN2,LOW);
 }
 
 
@@ -364,22 +394,22 @@ void hardStop() {
 
 
 //Function to print the status of the Wifi connection
-// void printWifiStatus() {
-//   // print the SSID of the network you're attached to:
-//   Serial.print("SSID: ");
-//   Serial.println(WiFi.SSID());
+void printWifiStatus() {
+  // print the SSID of the network you're attached to:
+  Serial.print("SSID: ");
+  Serial.println(WiFi.SSID());
 
-//   // print your board's IP address:
-//   IPAddress ip = WiFi.localIP();
-//   Serial.print("IP Address: ");
-//   Serial.println(ip);
+  // print your board's IP address:
+  IPAddress ip = WiFi.localIP();
+  Serial.print("IP Address: ");
+  Serial.println(ip);
   
-//   // print the received signal strength:
-//   long rssi = WiFi.RSSI();
-//   Serial.print("signal strength (RSSI):");
-//   Serial.print(rssi);
-//   Serial.println(" dBm");
-// }
+  // print the received signal strength:
+  long rssi = WiFi.RSSI();
+  Serial.print("signal strength (RSSI):");
+  Serial.print(rssi);
+  Serial.println(" dBm");
+}
 
 
 // Prints the packets values as well as the encoded values
