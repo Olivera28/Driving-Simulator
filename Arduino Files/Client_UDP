@@ -7,26 +7,23 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
-#define pwmVideo 6 
+#define pwmVideo 0 
 
 #include <Servo.h> 
 
 Servo velServo; 
 Servo turnServo;
 
+// Set WiFi credentials
+#define WIFI_SSID "iot_lab"
+#define WIFI_PASS "44FEC4DDB9"
+
 int status = WL_IDLE_STATUS;
-///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-char ssid[] = "";        // your network SSID (name)
-char pass[] = "";    // your network password (use for WPA, or use as key for WEP)
-int keyIndex = 0;            // your network key Index number (needed only for WEP)
-
 unsigned int localPort = 2390;      // local port to listen on
-
-
 
 //UDP
 WiFiUDP Udp;
-IPAddress remoteIP(10,144,113,62); //IP address for WiFi connection
+IPAddress remoteIP(10,144,113,6); //IP address for WiFi connection
 
 // Packet struct for receiving gear, velocity (vel), and angle of turn (turn)
 struct UdpPacket{
@@ -38,8 +35,8 @@ struct UdpPacket{
 char packetBuffer[255]; //buffer to hold incoming packet
 char  ReplyBuffer[] = "acknowledged";       // a string to send back
 
-void setup() {
 
+void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
 
@@ -50,7 +47,6 @@ void setup() {
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
     Serial.println("Communication with WiFi module failed!");
-
     // don't continue
     while (true);
   }
@@ -64,10 +60,10 @@ void setup() {
   // attempt to connect to Wifi network:
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
+    Serial.println(WIFI_SSID);
 
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-    status = WiFi.begin(ssid, pass);
+    status = WiFi.begin(WIFI_SSID, WIFI_PASS);
 
     // wait 10 seconds for connection:
     delay(10000);
@@ -83,7 +79,7 @@ void setup() {
   pinMode(pwmVideo,OUTPUT);
   turnServo.attach(7,1000,2000);
   delay(1);
-  velServo.attach(0,1000,2000); //PWM Pin Connection //20ms  
+  velServo.attach(11,1000,2000); //PWM Pin Connection //20ms  
   delay(1);
   turnServo.write(105);
   velServo.write(90); //DO NOT CHANGE! Require to activate ESC
@@ -93,7 +89,6 @@ void setup() {
 }
 
 void loop() {
-
   // if there's data available, read a packet
   int packetSize = Udp.parsePacket();
 
@@ -152,8 +147,6 @@ void controlRC(){
   }
 
 }
-
-
 
 
 
