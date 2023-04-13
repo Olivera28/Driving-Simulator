@@ -16,8 +16,8 @@ Servo turnServo;
 
 int status = WL_IDLE_STATUS;
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-char ssid[] = "iot_lab";        // your network SSID (name)
-char pass[] = "44FEC4DDB9";    // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "";        // your network SSID (name)
+char pass[] = "";    // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;            // your network key Index number (needed only for WEP)
 
 unsigned int localPort = 2390;      // local port to listen on
@@ -26,6 +26,7 @@ unsigned int localPort = 2390;      // local port to listen on
 
 //UDP
 WiFiUDP Udp;
+IPAddress remoteIP(10,144,113,62); //IP address for WiFi connection
 
 // Packet struct for receiving gear, velocity (vel), and angle of turn (turn)
 struct UdpPacket{
@@ -101,13 +102,6 @@ void loop() {
     //Serial.print("Received packet of size ");
     //Serial.println(packetSize);
     //Serial.print("From ");
-
-    // Retrives received packet ip for acknowledge packet
-    IPAddress remoteIp = Udp.remoteIP();
-
-    Serial.print(remoteIp);
-    Serial.print(", port ");
-    Serial.println(Udp.remotePort());
 
     // read the packet into packetBufffer
     int len = Udp.read(packetBuffer, 256);
