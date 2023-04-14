@@ -124,6 +124,7 @@ void setup() {
   Serial.println("Connected to wifi");
   printWifiStatus();
   Serial.println("\nStarting connection to server...");
+  printWifiStatus();
   
   // if you get a connection, report back via serial:
   Udp.begin(UDP_PORT);
@@ -136,10 +137,10 @@ void setup() {
 
 void loop() {
   // Retrives received packet ip for acknowledge packet
-  IPAddress remoteIP = Udp.remoteIP();
-  Serial.print(remoteIP);
-  Serial.print(", port ");
-  Serial.println(Udp.remotePort());
+  IPAddress serverIP (10 ,144 ,113 ,197);
+  //Serial.print(remoteIP);
+  //Serial.print(", port ");
+  //Serial.println(Udp.remotePort());
   
   //reading data from pedal's potentiometers
   acceleration = analogRead(A1);
@@ -197,7 +198,7 @@ void loop() {
   memcpy(packetBuffer+sizeof(packet.gear)+sizeof(packet.vel), &packet.turn, sizeof(packet.turn));
          
   //Opens a packet, writes to the buffer, and sends the packet
-  Udp.beginPacket(remoteIP, UDP_PORT);
+  Udp.beginPacket(serverIP, UDP_PORT);
   Udp.write(packetBuffer, sizeof(packetBuffer));
   Udp.endPacket();
 
@@ -252,6 +253,7 @@ void setVelocity(){
   }
 
   Serial.println(velocity);
+  Serial.println(packet.vel);
 }
 
 
