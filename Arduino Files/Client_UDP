@@ -17,13 +17,12 @@ Servo turnServo;
 // Set WiFi credentials
 #define WIFI_SSID "iot_lab"
 #define WIFI_PASS "44FEC4DDB9"
-#define UDP_PORT 2390  // local port to listen on
+//#define UDP_PORT 2390  // local port to listen on
 
 int status = WL_IDLE_STATUS;
-
+unsigned int localPort = 2390;      // local port to listen on
 //UDP
 WiFiUDP Udp;
-IPAddress remoteIP(10,144,113,136); //IP address for WiFi connection
 
 // Packet struct for receiving gear, velocity (vel), and angle of turn (turn)
 struct UdpPacket{
@@ -67,12 +66,12 @@ void setup() {
     delay(10000);
   }
 
-  //Serial.println("Connected to wifi");
-  //printWifiStatus();
-  //Serial.println("\nStarting connection to server...");
+  Serial.println("Connected to wifi");
+  printWifiStatus();
+  Serial.println("\nStarting connection to server...");
 
   // if you get a connection, report back via serial:
-  Udp.begin(UDP_PORT);
+  Udp.begin(localPort);
 
   //Initializing data for the RC car motors
   pinMode(pwmVideo,OUTPUT);
@@ -84,22 +83,28 @@ void setup() {
   velServo.write(90); //DO NOT CHANGE! Require to activate ESC
   delay(5000);       //Mandatory Wait Time 
 
-
 }
 
 void loop() {
+  //IPAddress remoteIP(10,144,113,83); //IP address for WiFi connection
+  // IPAddress remoteIP = Udp.remoteIP();
+  // Serial.println(remoteIP);
   // if there's data available, read a packet
   int packetSize = Udp.parsePacket();
 
   if (packetSize) {
-    // Prints Packet size
-    //Serial.print("Received packet of size ");
-    //Serial.println(packetSize);
-    //Serial.print("From ");
+    //Prints Packet size
+    // Serial.print("Received packet of size ");
+    // Serial.println(packetSize);
+    // Serial.print("From ");
 
+    IPAddress remoteIp = Udp.remoteIP();
+    // Serial.print(remoteIp);
+    // Serial.print(", port ");
+    // Serial.println(Udp.remotePort());
+    
     // read the packet into packetBufffer
     int len = Udp.read(packetBuffer, 256);
-
     if (len > 0) {
       packetBuffer[len] = 0;
     }
@@ -110,20 +115,20 @@ void loop() {
     memcpy(&packet.turn, packetBuffer+sizeof(packet.gear)+sizeof(packet.vel), sizeof(packet.turn));
 
     controlRC();
-    // Prints received values
-    // Serial.print("Gear:");    
-    // Serial.print(packet.gear);
-    // Serial.print(",");
-    // Serial.print("Velocity:");
-    // Serial.print(packet.vel);
-    // Serial.print(",");
-    // Serial.print("Turning:");
-    // Serial.println(packet.turn);
+    //Prints received values
+    Serial.print("Gear:");    
+    Serial.print(packet.gear);
+    Serial.print(",");
+    Serial.print("Velocity:");
+    Serial.print(packet.vel);
+    Serial.print(",");
+    Serial.print("Turning:");
+    Serial.println(packet.turn);
 
     // Send a reply, to the IP address and port that sent us the packet we received
-    // Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-    // Udp.write(ReplyBuffer);
-    // Udp.endPacket();
+    Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+    Udp.write(ReplyBuffer);
+    Udp.endPacket();
   }
 }
 
