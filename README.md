@@ -5,17 +5,29 @@ Team DK is working on a project that we believe can help new drivers and reduce 
 
 
 Software -
+
 WIFININA Library
+
 WIFIUdp Library
+
 SPI Library
+
 Arduino IDE
 
 Hardware -
+
 MKR Wi Fi 1010 Board $38.60
+
 Raspberry Pi 4B $45.00
+
 Dual Motor Driver $9.15
+
 RC Car 
+
 Rotary Encoder $ 3.00
+
 Brushless/Servo/DC Motor
+
 FPV Camera $26.59
+
 
