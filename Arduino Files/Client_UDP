@@ -75,9 +75,9 @@ void setup() {
 
   //Initializing data for the RC car motors
   pinMode(pwmVideo,OUTPUT);
-  turnServo.attach(7,1000,2000);
+  turnServo.attach(1,1000,2000);
   delay(1);
-  velServo.attach(11,1000,2000); //PWM Pin Connection //20ms  
+  velServo.attach(10,1000,2000); //PWM Pin Connection //20ms  
   delay(1);
   turnServo.write(105);
   velServo.write(90); //DO NOT CHANGE! Require to activate ESC
@@ -86,9 +86,6 @@ void setup() {
 }
 
 void loop() {
-  //IPAddress remoteIP(10,144,113,83); //IP address for WiFi connection
-  // IPAddress remoteIP = Udp.remoteIP();
-  // Serial.println(remoteIP);
   // if there's data available, read a packet
   int packetSize = Udp.parsePacket();
 
@@ -114,45 +111,38 @@ void loop() {
     memcpy(&packet.vel, packetBuffer+sizeof(packet.gear), sizeof(packet.vel));
     memcpy(&packet.turn, packetBuffer+sizeof(packet.gear)+sizeof(packet.vel), sizeof(packet.turn));
 
-    controlRC();
+    if(packet.gear == 'p'){
+      analogWrite(pwmVideo,200);
+      turnServo.write(packet.turn);
+      delay(1);
+      velServo.write(90);      
+    }
+
+    else if(packet.gear == 'd'){
+      analogWrite(pwmVideo,200);
+      turnServo.write(packet.turn);
+      delay(1);
+      velServo.write(packet.vel);
+    }
+    else{ //reverse gear = r
+      analogWrite(pwmVideo,150);
+      turnServo.write(packet.turn);
+      delay(1);
+      velServo.write(packet.vel);
+    }
+  
     //Prints received values
-    Serial.print("Gear:");    
-    Serial.print(packet.gear);
-    Serial.print(",");
-    Serial.print("Velocity:");
-    Serial.print(packet.vel);
-    Serial.print(",");
+    // Serial.print("Gear:");    
+    // Serial.println(packet.gear);
+    // Serial.print(",");
+    // Serial.print("Velocity:");
+    // Serial.print(packet.vel);
+    // Serial.print(",");
     Serial.print("Turning:");
     Serial.println(packet.turn);
-
-    // Send a reply, to the IP address and port that sent us the packet we received
-    Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-    Udp.write(ReplyBuffer);
-    Udp.endPacket();
+    delay(1);
   }
 }
-
-
-void controlRC(){
-  if(packet.gear == 'p'){
-    turnServo.write(packet.turn);
-    velServo.write(90);      
-  }
-
-  if(packet.gear == 'd'){
-    analogWrite(pwmVideo,100);
-    turnServo.write(packet.turn);
-    velServo.write(packet.vel);
-  }
-  if(packet.gear == 'r'){
-    analogWrite(pwmVideo,200);
-    turnServo.write(packet.turn);
-    velServo.write(packet.vel);
-  }
-
-}
-
-
 
 void printWifiStatus() {
 
