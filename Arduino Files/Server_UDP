@@ -39,7 +39,7 @@ const float MIN_ACCELERATION = 0.5;
 
 
 //variables for the rotary encoder function
-int counter = 158; 
+int counter = 150; 
 int aState;
 int aLastState;
 
@@ -76,9 +76,9 @@ void setup() {
   Serial.begin(9600);
 
   //Digital pins for the push buttons
-  pinMode(1,INPUT_PULLDOWN);
-  pinMode(2,INPUT_PULLDOWN);
   pinMode(3,INPUT_PULLDOWN);
+  pinMode(4,INPUT_PULLDOWN);
+  pinMode(5,INPUT_PULLDOWN);
 
   //Digital pins for the rotary encoder
   pinMode(ENC_A,INPUT);
@@ -138,26 +138,28 @@ void setup() {
 
 void loop() {
   // Retrives received packet ip for acknowledge packet
-  IPAddress serverIP (10 ,144 ,113 ,244);
-  //Serial.print(remoteIP);
-  //Serial.print(", port ");
-  //Serial.println(Udp.remotePort());
+  IPAddress serverIP (10 ,144 ,113 ,245);
   
+  //checking the car's gear
+  setGear();
+  packet.gear = currentGear;
+
   //reading data from pedal's potentiometers
   acceleration = analogRead(A1);
   brake = analogRead(A2);
-
+  
   //building the packet with respect to real data
-  setGear();
   setVelocity();
-
-  packet.gear = currentGear;
   if (packet.gear == 'r'){
-    packet.vel = (map(velocity, 0.0, 100.0, 1018.0, 1300.0)/10.0);
+    packet.vel = (map(velocity, 0.0, 100.0, 1017.0, 1300.0)/10.0);
+    if(packet.vel < 101.80) packet.vel = 90.0;
   }
   if(packet.gear == 'd'){
-    packet.vel = (map(velocity, 0.0, 100.0, 820.0, 600.0)/10.0);
+    packet.vel = (map(velocity, 0.0, 100.0, 821.0, 600.0)/10.0);
+    if(packet.vel > 82.0) packet.vel = 90.0;
   }
+
+
   //Serial.println(packet.vel);
   //noInterrupts(); // disable interrupts temporarily while reading
   
@@ -175,18 +177,18 @@ void loop() {
     //Serial.print("Position: ");
     //Serial.println(counter);
 
-    if(counter > 316){counter = 316;}
-    if(counter < 0){counter = 0 ;}
+    if(counter > 250){counter = 250;}
+    if(counter < 50){counter = 50 ;}
     
-    if(counter > 162){ //Clockwise condition
-      turn_lr = map(counter, 162, 316, 105, 40);
+    if(counter > 155){ //Clockwise condition
+      turn_lr = map(counter, 155, 250, 105, 40);
       //Serial.print("Turning: ");
       //Serial.println(turn_lr);
       rotateCCW();
 
     }
-    if(counter < 154){ //CounterClockwise condition
-      turn_lr = map(counter, 0, 154, 190, 105);
+    if(counter < 145){ //CounterClockwise condition
+      turn_lr = map(counter, 50, 145, 190, 105);
       //Serial.print("Turning: ");
       //Serial.println(turn_lr);
       rotateCW();
@@ -194,6 +196,7 @@ void loop() {
     
   }
   packet.turn = turn_lr; 
+
   //interrupts(); // turn interrupts back on
   // Serial.print("Packet_turn: ");
   // Serial.println(packet.turn);
@@ -207,6 +210,7 @@ void loop() {
   Udp.beginPacket(serverIP, UDP_PORT);
   Udp.write(packetBuffer, sizeof(packetBuffer));
   Udp.endPacket();
+
   guiHelper++;
   if (guiHelper ==70){
     Serial.print(currentGear);
@@ -256,7 +260,7 @@ void setVelocity(){
 
    // Decelerates if not accelerating
   if (acceleration < MIN_ACCELERATION & velocity > .02){
-    velocity -= .05 - brake;
+    velocity -= .4 - brake;
   }
   //velocity = map(velocity, 0.0, 100.0, 82.0, 60.0);
   if (packet.gear == 'r'){
@@ -296,117 +300,6 @@ void stopMotor(){
   digitalWrite(AIN1,LOW); 
   digitalWrite(AIN2,LOW);
 }
-
-
-//Function to read the angular rotation of the steering wheel using a rotary encoder
-// int readTurn(){
-//   int turn_lr = 0;
-
-//   if (aState != aLastState){
-
-//      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
-//     if (digitalRead(ENCB) != aState) { 
-//       counter ++;
-//     } else {
-//       counter --;
-//     }
-     
-//     // Wrap around when wheel has tunred passed three times to the right
-//     if(counter == 238) counter = 0;
-//     // Wrap around when wheel has tunred passed three times to the left
-//     if(counter == -238) counter = 0;
- 
-//     // User is turning the steering wheel to the right
-//     Serial.print("Position: ");
-//     Serial.println(counter);
-
-//     if(counter > 0){ //Clockwise condition
-//       turn_lr = map(counter, 0, 238, 105, 40);
-//       Serial.print("Turning: ");
-//       Serial.println(turn_lr);
-
-//       motorResist = map(counter,0,238,0,-237);
-//       digitalWrite(AIN1,HIGH) ; 
-//       digitalWrite(AIN2,LOW) ;
-//       Serial.println(motorResist);
-//       analogWrite(pwmA,motorResist*3); 
-//       delay(1); 
-//       //analogWrite(pwmA,0);
-
-//     }
-//     if(counter < 0){ //CounterClockwise condition
-//       turn_lr = map(counter, -238, 0, 190, 105);
-//       Serial.print("Turning: ");
-//       Serial.println(turn_lr);
-
-//       motorResist = map(counter, 0,-237,0,237);
-//       digitalWrite(AIN1,LOW) ; 
-//       digitalWrite(AIN2,HIGH);
-//       Serial.println(motorResist); 
-//       analogWrite(pwmA,motorResist*3); 
-//       delay(1);
-//       //analogWrite(pwmA,0); 
-//     }
-      
-//   }
-
-//   return turn_lr;
-
-
-
-//   /*
-//   aState = digitalRead(outputA); // Reads the "current" state of the outputA
-//   // If the previous and the current state of the outputA are different, that means a Pulse has occured
-//   if (aState != aLastState){     
-//   // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
-//   if (digitalRead(outputB) != aState) {
-//     counter ++;
-//   } 
-//   else {
-//     counter --;
-//   }
-
-//   // Wrap around when wheel has tunred passed three times to the right
-//   if(counter == 238) counter = 0;
-
-//   // Wrap around when wheel has tunred passed three times to the left
-//   if(counter == -238) counter = 0;
-
- 
-//   // User is turning the steering wheel to the right
-//   if(counter > 0){
-//     turn = map(counter, 0, 238, 105, 40);
-//     motorResist = map(counter,0,238,0,237);
-//     digitalWrite(AIN1,HIGH) ; 
-//     digitalWrite(AIN2,LOW) ; 
-//     analogWrite(pwmA,motorResist*3); 
-//     delay(1); 
-//     //analogWrite(pwmA,0);
-//     Serial.print("Turning: ");
-//     Serial.println(motorResist);
-//     //Serial.println(turn);
-//   }
-//   if(counter < 0){
-//     turn = map(counter, -238, 0, 190, 105);
-//     motorResist = map(counter, 0,-238,0,237);
-//     digitalWrite(AIN1,LOW) ; 
-//     digitalWrite(AIN2,HIGH) ; 
-//     analogWrite(pwmA,motorResist*3); 
-//     delay(1); 
-//     //analogWrite(pwmA,0); 
-//     Serial.print("Turning: ");
-//     Serial.println(motorResist);
-//     //Serial.println(turn);
-//   }
-    
-  
-//   } 
-//   */
-
-
-// }
-
-
 
 
 
