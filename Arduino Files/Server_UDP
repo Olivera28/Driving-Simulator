@@ -27,8 +27,8 @@
 #include <WiFiUdp.h>  
 
 // Set WiFi credentials
-#define WIFI_SSID "iot_lab"
-#define WIFI_PASS "44FEC4DDB9"
+#define WIFI_SSID ""
+#define WIFI_PASS ""
 
 #define UDP_PORT 2390
 int status = WL_IDLE_STATUS;
@@ -138,7 +138,7 @@ void setup() {
 
 void loop() {
   // Retrives received packet ip for acknowledge packet
-  IPAddress serverIP (10 ,144 ,113 ,245);
+  IPAddress serverIP (10 ,144 ,113 ,245);//You will need to add the new IP address from the RC car arduino
   
   //checking the car's gear
   setGear();
@@ -159,10 +159,6 @@ void loop() {
     if(packet.vel > 82.0) packet.vel = 90.0;
   }
 
-
-  //Serial.println(packet.vel);
-  //noInterrupts(); // disable interrupts temporarily while reading
-  
   aState = digitalRead(ENC_A); // Reads the "current" state of the outputA
   if (aState != aLastState){
 
@@ -172,35 +168,23 @@ void loop() {
     } else {
       counter --;
     }
-     
-    // User is turning the steering wheel to the right
-    //Serial.print("Position: ");
-    //Serial.println(counter);
-
+  
     if(counter > 250){counter = 250;}
     if(counter < 50){counter = 50 ;}
     
     if(counter > 155){ //Clockwise condition
-      turn_lr = map(counter, 155, 250, 105, 40);
-      //Serial.print("Turning: ");
-      //Serial.println(turn_lr);
+      turn_lr = map(counter, 155, 250, 105, 40);//mapping the data with respect to the servo motor values
       rotateCCW();
 
     }
     if(counter < 145){ //CounterClockwise condition
-      turn_lr = map(counter, 50, 145, 190, 105);
-      //Serial.print("Turning: ");
-      //Serial.println(turn_lr);
+      turn_lr = map(counter, 50, 145, 190, 105);//mapping the data with respect to the servo motor values
       rotateCW();
     }
     
   }
   packet.turn = turn_lr; 
 
-  //interrupts(); // turn interrupts back on
-  // Serial.print("Packet_turn: ");
-  // Serial.println(packet.turn);
-  // printPacketInfo();
   // Copys gear, velocity, and turn angle from struct into the packetBuffer
   memcpy(packetBuffer, &packet.gear, sizeof(packet.gear));
   memcpy(packetBuffer+sizeof(packet.gear), &packet.vel, sizeof(packet.vel));
@@ -211,6 +195,7 @@ void loop() {
   Udp.write(packetBuffer, sizeof(packetBuffer));
   Udp.endPacket();
 
+  //Sending data through serial communication to the Raspberry Pi GUI
   guiHelper++;
   if (guiHelper ==70){
     Serial.print(currentGear);
@@ -234,19 +219,16 @@ void setGear(){
    if (digitalRead(4) == 1){
      currentGear = 'r';
    }
-   //Serial.print(currentGear);
-   //Serial.print(",");
 }
 
 
 //function to set the velocity of our RC car
 void setVelocity(){
   // Maps potentiometer to acceleration values
-  //acceleration = map(acceleration, 0, 1023, 60, 82);
   acceleration = acceleration / 1000;
   brake = map(brake, 0, 1023, 0, 640);
   brake = brake / 10000;
-  //Serial.println(brake);
+  
 
   // Accelerates car past a specefic threshold up to a max speed
   if (acceleration > MIN_ACCELERATION && velocity <= MAX_SPEED){
@@ -262,15 +244,13 @@ void setVelocity(){
   if (acceleration < MIN_ACCELERATION & velocity > .02){
     velocity -= .4 - brake;
   }
-  //velocity = map(velocity, 0.0, 100.0, 82.0, 60.0);
+
   if (packet.gear == 'r'){
     packet.vel = (map(velocity, 0.0, 100.0, 1018.0, 1300.0)/10.0);
   }
   else{
     packet.vel = (map(velocity, 0.0, 100.0, 820.0, 600.0)/10.0);
   }
-
-  //Serial.println(velocity);
 
 }
 
