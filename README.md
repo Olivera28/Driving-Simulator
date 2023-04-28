@@ -40,3 +40,9 @@ A battery that can supply 5-12V
 
 Materials to Build a steering wheel
 
+
+Finally, the steering wheel box and pedals were base in the following project ideas:
+
+DIY FORCE FEEDBACK GAMING STEERING WHEEL | ARDUINO : https://www.youtube.com/watch?v=gvoN_WnI2nk&t=346s
+
+DIY Sim Racing Pedals (3D Printed) : https://www.youtube.com/watch?v=I4P86DJPXAc&t=9s
