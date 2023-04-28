@@ -15,8 +15,8 @@ Servo velServo;
 Servo turnServo;
 
 // Set WiFi credentials
-#define WIFI_SSID "iot_lab"
-#define WIFI_PASS "44FEC4DDB9"
+#define WIFI_SSID ""
+#define WIFI_PASS ""
 //#define UDP_PORT 2390  // local port to listen on
 
 int status = WL_IDLE_STATUS;
