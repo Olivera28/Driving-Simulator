@@ -1,6 +1,6 @@
 /* UDP SERVER CODE - MKR WIFI 1010
    Team DK
-   Server code for MKR WIFI 101 Arduino board. Receives UDP Packets from client and parses packet for gear
+   Server code for MKR WIFI 101 Arduino board. Receives UDP Packets from client and parses packet for gear,
    velocity, and turn angle
 */
 
@@ -130,16 +130,6 @@ void loop() {
       delay(1);
       velServo.write(packet.vel);
     }
-  
-    //Prints received values
-    // Serial.print("Gear:");    
-    // Serial.println(packet.gear);
-    // Serial.print(",");
-    // Serial.print("Velocity:");
-    // Serial.print(packet.vel);
-    // Serial.print(",");
-    Serial.print("Turning:");
-    Serial.println(packet.turn);
     delay(1);
   }
 }
