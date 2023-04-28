@@ -16,18 +16,27 @@ Arduino IDE
 
 Hardware -
 
-MKR Wi Fi 1010 Board $38.60
+2 MKR Wi Fi 1010 Boardl; $38.60 each
 
-Raspberry Pi 4B $45.00
+Raspberry Pi 4B; $45.00
 
-Dual Motor Driver $9.15
+Dual Motor Driver; $9.15
 
 RC Car 
 
-Rotary Encoder $ 3.00
+Rotary Encoder; $3.00
 
 Brushless/Servo/DC Motor
 
-FPV Camera $26.59
+2 FPV Cameras; $26.59 each
 
+A video transmitter
+
+A video receiver with a HDMI port
+
+A 3 way switcher video
+
+A battery that can supply 5-12V
+
+Materials to Build a steering wheel
 
